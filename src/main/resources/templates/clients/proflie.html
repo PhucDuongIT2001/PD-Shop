@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Tài khoản của tôi | DP Shop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="flex-grow container mx-auto px-4 py-10">
+  <div class="flex flex-col lg:flex-row gap-8">
+    <aside class="lg:w-1/4">
+      <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div class="text-center pb-6 border-b mb-6">
+          <div class="w-20 h-20 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <i class="fa-solid fa-user-tie text-3xl text-blue-600"></i>
+          </div>
+          <h2 class="font-black text-gray-800 uppercase tracking-tighter">Dương Trương Duy Toàn</h2>
+          <p class="text-xs text-gray-400 italic">Thành viên </p>
+        </div>
+        <nav class="space-y-2">
+          <a href="#" class="block px-4 py-3 rounded-xl bg-blue-50 text-blue-700 font-bold italic"><i class="fa-solid fa-id-card mr-3"></i> Thông tin cá nhân</a>
+          <a href="#" class="block px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 transition"><i class="fa-solid fa-box-open mr-3"></i> Đơn hàng của tôi</a>
+          <a href="/login" class="block px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition"><i class="fa-solid fa-right-from-bracket mr-3"></i> Đăng xuất</a>
+        </nav>
+      </div>
+    </aside>
+
+    <section class="lg:w-3/4 space-y-8">
+      <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+        <h3 class="text-xl font-black text-gray-800 mb-8 border-l-4 border-blue-600 pl-4 uppercase">Cài đặt tài khoản</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <p class="text-xs font-bold text-gray-400 uppercase mb-1">Họ và tên</p>
+            <p class="font-bold text-gray-800">Dương Trương Duy Toàn</p>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-gray-400 uppercase mb-1">Email</p>
+            <p class="font-bold text-gray-800">nasatonytoan@gmail.com</p>
+          </div>
+        </div>
+        <button class="mt-10 border-2 border-blue-600 text-blue-600 px-8 py-2 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition">Chỉnh sửa thông tin</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+.product-card-hover {
+    transition: all 0.3s ease;
+}
+.product-card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.custom-gradient-blue {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+}

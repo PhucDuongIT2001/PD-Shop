@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header" class="bg-white shadow-sm sticky top-0 z-50 font-sans">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+        <a href="/" class="text-2xl font-bold text-blue-600">PD<span class="text-orange-500">SHOP</span></a>
+
+        <div class="hidden md:block flex-1 mx-10 max-w-lg">
+            <div class="relative">
+                <input type="text" placeholder="Tìm sản phẩm..." class="w-full border rounded-full py-2 px-5 focus:ring-2 focus:ring-blue-400 outline-none">
+                <button class="absolute right-4 top-2.5 text-gray-400"><i class="fa fa-search"></i></button>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-5 text-gray-600">
+            <a href="/login" class="hover:text-blue-600 flex flex-col items-center">
+                <i class="fa fa-user"></i>
+                <span class="text-[10px]">Tài khoản</span>
+            </a>
+            <a th:href="@{/cart}" class="hover:text-blue-600 flex flex-col items-center relative">
+                <i class="fa fa-shopping-cart"></i>
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full px-1.5">0</span>
+                <span class="text-[10px]">Giỏ hàng</span>
+            </a>
+        </div>
+    </div>
+</header>
+</body>
+</html>
