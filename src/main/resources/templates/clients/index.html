@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PD Shop - Cửa hàng đồ công nghệ cao cấp cho Designer và Gamers.">
+    <title>Trang chủ | PD Shop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-slate-50">
+<div th:replace="~{fragments/header :: header}"></div>
+
+<section class="container mx-auto px-4 mt-8">
+    <div class="hero-gradient rounded-[2rem] p-12 md:p-20 text-white flex flex-col md:flex-row justify-between items-center relative overflow-hidden shadow-2xl shadow-blue-200">
+        <div class="relative z-10 md:w-1/2">
+            <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 inline-block">Mùa tựu trường 2024</span>
+            <h2 class="text-5xl md:text-7xl font-extrabold leading-tight mb-6">Ưu đãi đồ họa <span class="text-orange-400">3D</span></h2>
+            <p class="text-lg text-blue-100 mb-10 max-w-md">Giảm ngay <span class="font-bold text-white">10%</span> cho sinh viên FPT BTEC khi mua các dòng Laptop ROG và ProArt.</p>
+            <button class="btn-premium bg-white text-blue-700 px-10 py-4 rounded-2xl font-black text-lg transition shadow-xl hover:shadow-white/20">Khám phá ngay</button>
+        </div>
+        <div class="md:w-1/2 flex justify-center mt-12 md:mt-0 relative group">
+            <i class="fa-solid fa-laptop-code text-[12rem] md:text-[16rem] text-white opacity-20 animate-float"></i>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<main class="container mx-auto px-4 py-20">
+    <div class="flex items-center justify-between mb-12">
+        <div>
+            <h3 class="text-3xl font-black text-gray-900 uppercase tracking-tighter">Sản phẩm nổi bật</h3>
+            <p class="text-gray-500 mt-2 font-medium">Lựa chọn tốt nhất cho Designer chuyên nghiệp</p>
+        </div>
+        <a th:href="@{/shop}" class="text-blue-600 font-bold hover:gap-3 flex items-center transition-all">Xem tất cả <i class="fa-solid fa-arrow-right ml-2"></i></a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div th:each="p : ${productList}" class="bg-white p-5 rounded-[2rem] border border-gray-100 product-card group">
+            <div class="aspect-square overflow-hidden rounded-2xl mb-6 bg-slate-50 flex items-center justify-center p-8 relative">
+                <span class="absolute top-4 right-4 bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full z-10">-10%</span>
+                <img th:src="@{${p.image}}" class="max-w-full max-h-full object-contain group-hover:scale-110 transition duration-700 ease-out" alt="Product Image">
+            </div>
+
+            <div class="px-2">
+                <p th:text="${p.brand.name}" class="text-[10px] text-blue-600 font-black uppercase mb-1 tracking-widest"></p>
+                <h4 th:text="${p.name}" class="font-bold text-gray-800 text-lg line-clamp-2 h-14 mb-2">Tên sản phẩm</h4>
+                <div class="flex items-center justify-between mt-auto">
+                    <p th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT')} + 'đ'" class="text-blue-700 font-black text-xl">0đ</p>
+                    <a th:href="@{/product-detail}" class="w-10 h-10 bg-gray-900 text-white rounded-xl flex items-center justify-center hover:bg-blue-600 transition shadow-lg">
+                        <i class="fa-solid fa-plus"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

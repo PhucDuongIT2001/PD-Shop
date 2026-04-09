@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản của tôi | PD Shop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-slate-50 flex flex-col min-h-screen">
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="flex-grow container mx-auto px-4 py-16">
+    <div class="flex flex-col lg:flex-row gap-10">
+        <aside class="lg:w-1/4">
+            <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 sticky top-24">
+                <div class="text-center pb-8 border-b border-gray-50 mb-8">
+                    <div class="w-24 h-24 bg-blue-50 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-white shadow-xl">
+                        <i class="fa-solid fa-user-astronaut text-4xl text-blue-600"></i>
+                    </div>
+                    <h2 class="font-black text-gray-800 uppercase tracking-tighter text-xl">Dương Trương Duy Toàn</h2>
+                    <p class="text-[10px] text-blue-600 font-black uppercase mt-2 tracking-widest bg-blue-50 px-3 py-1 rounded-full inline-block">Thành viên Premium</p>
+                </div>
+                <nav class="space-y-3">
+                    <a th:href="@{/profile}" class="flex items-center px-5 py-4 rounded-2xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-100 transition">
+                        <i class="fa-solid fa-id-card mr-4"></i> Hồ sơ cá nhân
+                    </a>
+                    <a href="#" class="flex items-center px-5 py-4 rounded-2xl text-gray-500 hover:bg-gray-50 transition font-bold">
+                        <i class="fa-solid fa-box-open mr-4"></i> Lịch sử đơn hàng
+                    </a>
+                    <a th:href="@{/login}" class="flex items-center px-5 py-4 rounded-2xl text-red-500 hover:bg-red-50 transition font-bold">
+                        <i class="fa-solid fa-right-from-bracket mr-4"></i> Đăng xuất
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <section class="lg:w-3/4 space-y-8">
+            <div class="bg-white rounded-[2rem] p-10 shadow-sm border border-gray-100">
+                <h3 class="text-2xl font-black text-gray-900 mb-10 flex items-center gap-4">
+                    <span class="w-2 h-8 bg-blue-600 rounded-full"></span>
+                    THÔNG TIN TÀI KHOẢN
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Họ và tên</p>
+                        <p class="font-bold text-gray-800 text-lg">Dương Trương Duy Toàn</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Địa chỉ Email</p>
+                        <p class="font-bold text-gray-800 text-lg">nasatonytoan@gmail.com</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Số điện thoại</p>
+                        <p class="font-bold text-gray-800 text-lg">090xxxxxxx</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ngày tham gia</p>
+                        <p class="font-bold text-gray-800 text-lg">01/01/2024</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 pt-10 border-t border-gray-50 flex gap-4">
+                    <button class="bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-100 uppercase text-xs tracking-widest">Chỉnh sửa hồ sơ</button>
+                    <button class="border-2 border-gray-100 text-gray-400 px-8 py-3.5 rounded-2xl font-black hover:bg-gray-50 transition uppercase text-xs tracking-widest">Đổi mật khẩu</button>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

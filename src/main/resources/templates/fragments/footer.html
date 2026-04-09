@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <footer th:fragment="footer" class="bg-gray-900 text-gray-400 py-20 mt-20 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600"></div>
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
+            <div class="space-y-6">
+                <a th:href="@{/}" class="text-3xl font-black text-white">PD<span class="text-orange-500">SHOP</span></a>
+                <p class="text-sm leading-relaxed">Điểm đến tin cậy cho cộng đồng Designer và Gamers. Chúng tôi cung cấp
+                    những giải pháp công nghệ tối ưu với hiệu suất vượt trội.</p>
+                <div class="flex gap-4">
+                    <a href="#"
+                        class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition"><i
+                            class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"
+                        class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition"><i
+                            class="fa-brands fa-instagram"></i></a>
+                    <a href="#"
+                        class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition"><i
+                            class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Danh mục</h4>
+                <ul class="text-sm space-y-4 font-medium">
+                    <li><a th:href="@{/}" class="hover:text-orange-400 transition">Trang chủ</a></li>
+                    <li><a href="#" class="hover:text-orange-400 transition">Sản phẩm mới</a></li>
+                    <li><a href="#" class="hover:text-orange-400 transition">Khuyến mãi</a></li>
+                    <li><a href="#" class="hover:text-orange-400 transition">Tin tức công nghệ</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Hỗ trợ khách hàng</h4>
+                <ul class="text-sm space-y-4 font-medium">
+                    <li><a href="#" class="hover:text-orange-400 transition">Chính sách bảo hành</a></li>
+                    <li><a href="#" class="hover:text-orange-400 transition">Chính sách đổi trả</a></li>
+                    <li><a href="#" class="hover:text-orange-400 transition">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-orange-400 transition">Câu hỏi thường gặp</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Liên hệ hệ thống</h4>
+                <div class="space-y-4 text-sm">
+                    <div class="flex items-start gap-4">
+                        <i class="fa-solid fa-location-dot mt-1 text-orange-500"></i>
+                        <p>69/19/11 đường 138 phường Tăng Nhơn Phú, TP Hồ Chí Minh</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <i class="fa-solid fa-phone text-orange-500"></i>
+                        <p>+84 123 456 789</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <i class="fa-solid fa-envelope text-orange-500"></i>
+                        <p>duongduyphuc20801@gmail.com</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div
+            class="container mx-auto px-4 mt-20 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p class="text-xs font-bold uppercase tracking-widest">&copy; 2024 PD SHOP. All Rights Reserved.</p>
+            <div class="flex gap-6 grayscale opacity-30">
+                <i class="fa-brands fa-cc-visa text-3xl"></i>
+                <i class="fa-brands fa-cc-mastercard text-3xl"></i>
+                <i class="fa-brands fa-cc-paypal text-3xl"></i>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
