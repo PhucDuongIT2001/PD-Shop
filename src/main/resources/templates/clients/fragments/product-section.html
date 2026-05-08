@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="section(title, categoryId)" class="w-full">
+        <div class="flex items-center justify-between mb-8 border-b pb-4">
+            <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tight flex items-center gap-3">
+                <span class="w-3 h-8 bg-blue-600 rounded-full inline-block"></span>
+                <span th:text="${title}">Tên Phân Khu Sản Phẩm</span>
+            </h2>
+            <a href="#" class="text-sm font-bold text-blue-600 hover:text-orange-500 transition flex items-center gap-2">
+                Xem tất cả <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Sidebar: Filters & Brands -->
+            <div class="lg:w-1/5 hidden lg:block space-y-8">
+                <!-- Filters -->
+                <div>
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Bộ lọc nổi bật</h3>
+                    <ul class="space-y-3 text-sm font-semibold text-gray-600" th:if="${categoryId == '1'}">
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-gamepad w-4 text-center"></i> Gaming</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-battery-full w-4 text-center"></i> Pin siêu trâu</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-camera w-4 text-center"></i> Chụp ảnh đẹp</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-microchip w-4 text-center"></i> Tích hợp AI</a></li>
+                    </ul>
+                    <ul class="space-y-3 text-sm font-semibold text-gray-600" th:if="${categoryId == '3'}">
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-briefcase w-4 text-center"></i> Văn phòng</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-gamepad w-4 text-center"></i> Gaming</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-feather w-4 text-center"></i> Mỏng nhẹ</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-pen-nib w-4 text-center"></i> Đồ họa</a></li>
+                    </ul>
+                    <ul class="space-y-3 text-sm font-semibold text-gray-600" th:if="${categoryId == '2' or categoryId == '4'}">
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-star w-4 text-center"></i> Bán chạy</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-fire w-4 text-center"></i> Mới ra mắt</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition flex items-center gap-2"><i class="fa-solid fa-tag w-4 text-center"></i> Giá rẻ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Brands -->
+                <div>
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Thương hiệu</h3>
+                    <div class="flex flex-wrap gap-2" th:if="${categoryId == '1'}">
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Apple</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Samsung</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Xiaomi</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">OPPO</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2" th:if="${categoryId == '3'}">
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">MacBook</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">ASUS</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Lenovo</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Dell</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2" th:if="${categoryId == '2' or categoryId == '4'}">
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Apple</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Samsung</span>
+                        <span class="px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition">Garmin</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="lg:w-4/5 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Example Phone 1 -->
+                <div class="group bg-white rounded-3xl p-4 border border-gray-100 hover:border-blue-200 hover:shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col h-full" th:if="${categoryId == '1'}">
+                    <div class="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full z-10">-15%</div>
+                    <div class="aspect-square bg-gray-50 rounded-2xl mb-4 overflow-hidden relative flex items-center justify-center p-4">
+                        <img src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&q=80&w=400" alt="iPhone 15 Pro Max" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="flex-grow flex flex-col">
+                        <div class="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">Apple</div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition">iPhone 15 Pro Max 256GB Chính hãng VN/A</h4>
+                        <div class="mt-auto">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg font-black text-red-600">32.990.000₫</span>
+                                <span class="text-xs text-gray-400 line-through">38.990.000₫</span>
+                            </div>
+                            <button class="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition uppercase text-[10px] tracking-widest">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> Mua ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Phone 2 -->
+                <div class="group bg-white rounded-3xl p-4 border border-gray-100 hover:border-blue-200 hover:shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col h-full" th:if="${categoryId == '1'}">
+                    <div class="aspect-square bg-gray-50 rounded-2xl mb-4 overflow-hidden relative flex items-center justify-center p-4">
+                        <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&q=80&w=400" alt="Samsung Galaxy S24 Ultra" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="flex-grow flex flex-col">
+                        <div class="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">Samsung</div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition">Samsung Galaxy S24 Ultra 5G 512GB</h4>
+                        <div class="mt-auto">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg font-black text-red-600">31.490.000₫</span>
+                            </div>
+                            <button class="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition uppercase text-[10px] tracking-widest">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> Mua ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Laptop 1 -->
+                <div class="group bg-white rounded-3xl p-4 border border-gray-100 hover:border-blue-200 hover:shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col h-full" th:if="${categoryId == '3'}">
+                    <div class="absolute top-4 left-4 bg-orange-500 text-white text-[10px] font-black px-2 py-1 rounded-full z-10">Mới</div>
+                    <div class="aspect-square bg-gray-50 rounded-2xl mb-4 overflow-hidden relative flex items-center justify-center p-4">
+                        <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=400" alt="MacBook Air M3" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="flex-grow flex flex-col">
+                        <div class="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">Apple</div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition">Apple MacBook Air M3 15-inch 8GB/256GB</h4>
+                        <div class="mt-auto">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg font-black text-red-600">32.990.000₫</span>
+                            </div>
+                            <button class="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition uppercase text-[10px] tracking-widest">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> Mua ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Laptop 2 -->
+                <div class="group bg-white rounded-3xl p-4 border border-gray-100 hover:border-blue-200 hover:shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col h-full" th:if="${categoryId == '3'}">
+                    <div class="aspect-square bg-gray-50 rounded-2xl mb-4 overflow-hidden relative flex items-center justify-center p-4">
+                        <img src="https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&q=80&w=400" alt="ASUS ROG" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="flex-grow flex flex-col">
+                        <div class="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">ASUS</div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition">Laptop Gaming ASUS ROG Zephyrus G14</h4>
+                        <div class="mt-auto">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg font-black text-red-600">39.990.000₫</span>
+                                <span class="text-xs text-gray-400 line-through">42.000.000₫</span>
+                            </div>
+                            <button class="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition uppercase text-[10px] tracking-widest">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> Mua ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Accessory 1 -->
+                <div class="group bg-white rounded-3xl p-4 border border-gray-100 hover:border-blue-200 hover:shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col h-full" th:if="${categoryId == '2'}">
+                    <div class="aspect-square bg-gray-50 rounded-2xl mb-4 overflow-hidden relative flex items-center justify-center p-4">
+                        <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&q=80&w=400" alt="AirPods Pro" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="flex-grow flex flex-col">
+                        <div class="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">Apple</div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition">Tai nghe Bluetooth AirPods Pro 2 MagSafe</h4>
+                        <div class="mt-auto">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg font-black text-red-600">5.990.000₫</span>
+                            </div>
+                            <button class="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition uppercase text-[10px] tracking-widest">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> Mua ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Smartwatch 1 -->
+                <div class="group bg-white rounded-3xl p-4 border border-gray-100 hover:border-blue-200 hover:shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col h-full" th:if="${categoryId == '4'}">
+                    <div class="aspect-square bg-gray-50 rounded-2xl mb-4 overflow-hidden relative flex items-center justify-center p-4">
+                        <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=400" alt="Apple Watch" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="flex-grow flex flex-col">
+                        <div class="text-[10px] font-black text-gray-400 mb-1 uppercase tracking-widest">Apple</div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition">Apple Watch Series 9 GPS 41mm Viền Nhôm</h4>
+                        <div class="mt-auto">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg font-black text-red-600">9.490.000₫</span>
+                            </div>
+                            <button class="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition uppercase text-[10px] tracking-widest">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> Mua ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thêm 2-3 thẻ sản phẩm rỗng để layout đẹp (hoặc nếu chưa có data) -->
+                <div class="bg-gray-50 rounded-3xl p-4 border border-gray-100 flex items-center justify-center h-full min-h-[300px]" th:if="${categoryId == '1' or categoryId == '2' or categoryId == '3' or categoryId == '4'}">
+                    <div class="text-center">
+                        <i class="fa-solid fa-boxes-packing text-gray-300 text-4xl mb-3"></i>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Đang cập nhật thêm</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
