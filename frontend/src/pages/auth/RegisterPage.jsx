@@ -234,7 +234,7 @@ const RegisterPage = () => {
         <div className="mt-6">
           <button
             type="button"
-            onClick={() => window.location.href = 'http://localhost:8080/oauth2/authorization/google'}
+            onClick={() => window.location.href = '/oauth2/authorization/google'}
             className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
