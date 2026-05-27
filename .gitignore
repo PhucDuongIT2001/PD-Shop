@@ -31,3 +31,25 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Secrets & Env files
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# Log files
+*.log
+app-debug.log
+app.log
+spring-boot.log
+
+# Temporary / test scripts
+cookies.txt
+TestBcrypt.class
+TestBcrypt.java
+
+# Frontend node_modules & dist
+frontend/node_modules/
+frontend/dist/

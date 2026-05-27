@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.Objects;
 
@@ -12,6 +13,7 @@ public class OrderDetail {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
     private Order order;
 
     @ManyToOne

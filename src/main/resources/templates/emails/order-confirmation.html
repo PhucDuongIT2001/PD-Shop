@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác nhận đơn hàng</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f3f4f6; padding: 20px; color: #374151; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { color: #2563eb; margin: 0; font-size: 24px; }
+        .order-info { margin-bottom: 20px; }
+        .order-info p { margin: 5px 0; }
+        .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        .table th { background-color: #f9fafb; font-weight: bold; }
+        .total { font-size: 18px; font-weight: bold; text-align: right; color: #111827; }
+        .footer { text-align: center; font-size: 12px; color: #6b7280; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+        .primary-text { color: #2563eb; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cảm ơn bạn đã mua hàng tại PD Shop!</h1>
+        </div>
+        
+        <p>Xin chào <strong th:text="${order.user.fullName != null ? order.user.fullName : order.user.username}">Khách hàng</strong>,</p>
+        <p>Đơn hàng của bạn đã được ghi nhận. Để hoàn tất quá trình đặt hàng và nhận mã QR thanh toán, vui lòng xác nhận đơn hàng của bạn bằng cách bấm vào nút bên dưới:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <!-- Link trỏ về Frontend React để xử lý API xác nhận -->
+            <a th:href="@{'http://localhost:5173/confirm-order?token=' + ${order.confirmationToken}}" 
+               style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                XÁC NHẬN ĐƠN HÀNG
+            </a>
+        </div>
+        
+        <p>Dưới đây là thông tin chi tiết về đơn hàng của bạn:</p>
+        
+        <div class="order-info">
+            <p><strong>Mã đơn hàng:</strong> <span class="primary-text">#<span th:text="${order.id}">12345</span></span></p>
+            <p><strong>Ngày đặt:</strong> <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</span></p>
+            <p><strong>Trạng thái:</strong> <span style="background: #fef3c7; color: #d97706; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;" th:text="${order.status}">PENDING</span></p>
+        </div>
+
+        <h3>Thông tin giao hàng</h3>
+        <div class="order-info" style="background: #f9fafb; padding: 15px; border-radius: 6px;">
+            <p><strong>Người nhận:</strong> <span th:text="${order.shippingName}">Tên người nhận</span></p>
+            <p><strong>Số điện thoại:</strong> <span th:text="${order.shippingPhone}">0123456789</span></p>
+            <p><strong>Địa chỉ:</strong> <span th:text="${order.shippingAddress}">Địa chỉ giao hàng</span></p>
+            <p th:if="${order.note != null and !order.note.isEmpty()}"><strong>Ghi chú:</strong> <span th:text="${order.note}">Ghi chú</span></p>
+        </div>
+
+        <h3>Chi tiết sản phẩm</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th style="text-align: center;">SL</th>
+                    <th style="text-align: right;">Giá</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${order.orderDetails}">
+                    <td th:text="${item.product.name}">Tên sản phẩm</td>
+                    <td style="text-align: center;" th:text="${item.quantity}">1</td>
+                    <td style="text-align: right;" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + '₫'">100,000₫</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total">
+            Tổng cộng: <span class="primary-text" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + '₫'">100,000₫</span>
+        </div>
+
+        <div class="footer">
+            <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email support@pdshop.com hoặc hotline 1900-xxxx.</p>
+            <p>&copy; 2026 PD Shop. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

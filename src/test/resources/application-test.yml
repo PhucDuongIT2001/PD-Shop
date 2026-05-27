@@ -1,0 +1,23 @@
+spring:
+  # Configure H2 in-memory database for tests, with MySQL compatibility mode.
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL;NON_KEYWORDS=VALUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    # Let Hibernate create and drop the schema for each test run.
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+  # --- KEY CHANGE ---
+  # Disable Flyway for tests. Hibernate will manage the schema.
+  flyway:
+    enabled: false
+
+logging:
+  level:
+    org.springframework.security: DEBUG

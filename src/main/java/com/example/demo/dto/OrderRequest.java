@@ -1,26 +1,19 @@
 package com.example.demo.dto;
 
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Objects;
 
 public class OrderRequest {
-    private Long userId;
+
+    @NotEmpty(message = "Order must contain at least one item")
     private List<OrderItemRequest> items;
 
     public OrderRequest() {
     }
 
-    public OrderRequest(Long userId, List<OrderItemRequest> items) {
-        this.userId = userId;
+    public OrderRequest(List<OrderItemRequest> items) {
         this.items = items;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public List<OrderItemRequest> getItems() {
@@ -36,19 +29,18 @@ public class OrderRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrderRequest that = (OrderRequest) o;
-        return Objects.equals(userId, that.userId) && Objects.equals(items, that.items);
+        return Objects.equals(items, that.items);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, items);
+        return Objects.hash(items);
     }
 
     @Override
     public String toString() {
         return "OrderRequest{" +
-                "userId=" + userId +
-                ", items=" + items +
+                "items=" + items +
                 '}';
     }
 }

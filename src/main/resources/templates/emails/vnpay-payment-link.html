@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanh toán đơn hàng VNPAY</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #2563eb;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .footer {
+            background-color: #f8fafc;
+            text-align: center;
+            padding: 15px;
+            color: #64748b;
+            font-size: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Thanh toán đơn hàng qua VNPAY</h1>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong th:text="${order.user.username}">Khách hàng</strong>,</p>
+            
+            <p>Cảm ơn bạn đã đặt hàng tại PD Shop. Đơn hàng <strong>#<span th:text="${order.id}"></span></strong> của bạn đã được ghi nhận.</p>
+            
+            <p>Để hoàn tất quá trình đặt hàng, vui lòng bấm vào nút bên dưới để tiến hành thanh toán an toàn qua cổng VNPAY.</p>
+            
+            <div style="text-align: center;">
+                <a th:href="${paymentUrl}" class="btn">THANH TOÁN VNPAY NGAY</a>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 13px; color: #666;">
+                <i>Lưu ý: Link thanh toán này có giá trị trong thời gian ngắn. Vui lòng thanh toán sớm để chúng tôi tiến hành giao hàng.</i><br/>
+                Nếu bạn không thể nhấn vào nút trên, vui lòng copy đường link sau và dán vào trình duyệt:<br/>
+                <a th:href="${paymentUrl}" th:text="${paymentUrl}" style="word-break: break-all; color: #2563eb;">Link</a>
+            </p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 PD Shop. Mọi quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>

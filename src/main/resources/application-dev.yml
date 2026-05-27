@@ -1,0 +1,14 @@
+# Configuration for the 'dev' profile
+spring:
+  # MySQL Database Connection
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/PD_SHOP?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+
+  # JPA dialect for MySQL
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect

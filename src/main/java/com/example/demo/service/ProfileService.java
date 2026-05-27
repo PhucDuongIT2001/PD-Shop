@@ -1,32 +1,48 @@
 package com.example.demo.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.example.demo.repository.ProfileRepository;
+import com.example.demo.dto.ProfileDto;
 import com.example.demo.entity.Profile;
+import com.example.demo.entity.User;
+import com.example.demo.repository.ProfileRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
 public class ProfileService {
+
     @Autowired
     private ProfileRepository profileRepository;
 
-    public Profile getProfileByUser(com.example.demo.entity.User user) {
-        return profileRepository.findByUser(user).orElse(new Profile());
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    public Profile getProfileByUser(User user) {
+        // Find profile or create a new one if it doesn't exist for the user
+        return profileRepository.findByUser(user).orElseGet(() -> {
+            Profile newProfile = new Profile();
+            newProfile.setUser(user);
+            return newProfile;
+        });
     }
 
-    public void saveProfile(Profile profile) {
-        profileRepository.save(profile);
-    }
+    @Transactional
+    public Profile updateProfile(User user, ProfileDto profileDto, MultipartFile avatarImage) {
+        Profile profile = getProfileByUser(user);
 
-    public void updateProfile(Profile profile) {
-        profileRepository.save(profile);
-    }
+        profile.setFullName(profileDto.getFullName());
+        profile.setAddress(profileDto.getAddress());
+        profile.setPhone(profileDto.getPhone());
+        profile.setUpdatedAt(LocalDateTime.now());
 
-    public void deleteProfile(Integer id) {
-        profileRepository.deleteById(id);
-    }
+        if (avatarImage != null && !avatarImage.isEmpty()) {
+            String avatarPath = fileStorageService.storeFile(avatarImage, "avatars");
+            profile.setAvatarUrl(avatarPath);
+        }
 
+        return profileRepository.save(profile);
+    }
 }

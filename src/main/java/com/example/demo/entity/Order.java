@@ -1,91 +1,101 @@
 package com.example.demo.entity;
 
+import com.example.demo.entity.enums.OrderStatus;
+import com.example.demo.entity.enums.PaymentMethod;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Table(name = "orders")
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "total_amount")
+    @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(name = "order_date")
-    private LocalDateTime orderDate = LocalDateTime.now();
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false, length = 20)
+    private PaymentMethod paymentMethod = PaymentMethod.COD;
+
+    @CreationTimestamp
+    @Column(name = "order_date", updatable = false)
+    private LocalDateTime orderDate;
+
+    // --- Shipping info snapshot ---
+    @Column(name = "shipping_name", nullable = false, length = 150)
+    private String shippingName;
+
+    @Column(name = "shipping_phone", nullable = false, length = 20)
+    private String shippingPhone;
+
+    @Column(name = "shipping_address", nullable = false, length = 500)
+    private String shippingAddress;
+
+    @Column(name = "note", length = 500)
+    private String note;
+    // --- End shipping info ---
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderDetail> orderDetails;
+    private List<OrderDetail> orderDetails = new ArrayList<>();
 
-    public Order() {
-    }
+    @Column(name = "confirmation_token", length = 100)
+    private String confirmationToken;
 
-    public Order(Long id, User user, Double totalAmount, String status, LocalDateTime orderDate, List<OrderDetail> orderDetails) {
-        this.id = id;
-        this.user = user;
-        this.totalAmount = totalAmount;
-        this.status = status;
-        this.orderDate = orderDate;
-        this.orderDetails = orderDetails;
-    }
+    public Order() {}
 
-    public Long getId() {
-        return id;
-    }
+    // --- Getters & Setters ---
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getConfirmationToken() { return confirmationToken; }
+    public void setConfirmationToken(String confirmationToken) { this.confirmationToken = confirmationToken; }
 
-    public User getUser() {
-        return user;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-    public Double getTotalAmount() {
-        return totalAmount;
-    }
+    public Double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
 
-    public void setTotalAmount(Double totalAmount) {
-        this.totalAmount = totalAmount;
-    }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
 
-    public String getStatus() {
-        return status;
-    }
+    public LocalDateTime getOrderDate() { return orderDate; }
+    public void setOrderDate(LocalDateTime orderDate) { this.orderDate = orderDate; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public String getShippingName() { return shippingName; }
+    public void setShippingName(String shippingName) { this.shippingName = shippingName; }
 
-    public LocalDateTime getOrderDate() {
-        return orderDate;
-    }
+    public String getShippingPhone() { return shippingPhone; }
+    public void setShippingPhone(String shippingPhone) { this.shippingPhone = shippingPhone; }
 
-    public void setOrderDate(LocalDateTime orderDate) {
-        this.orderDate = orderDate;
-    }
+    public String getShippingAddress() { return shippingAddress; }
+    public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
 
-    public List<OrderDetail> getOrderDetails() {
-        return orderDetails;
-    }
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
 
-    public void setOrderDetails(List<OrderDetail> orderDetails) {
-        this.orderDetails = orderDetails;
-    }
+    public List<OrderDetail> getOrderDetails() { return orderDetails; }
+    public void setOrderDetails(List<OrderDetail> orderDetails) { this.orderDetails = orderDetails; }
+
+    public PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
 
     @Override
     public boolean equals(Object o) {
@@ -96,18 +106,5 @@ public class Order {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Order{" +
-                "id=" + id +
-                ", user=" + user +
-                ", totalAmount=" + totalAmount +
-                ", status='" + status + '\'' +
-                ", orderDate=" + orderDate +
-                '}';
-    }
+    public int hashCode() { return Objects.hash(id); }
 }
