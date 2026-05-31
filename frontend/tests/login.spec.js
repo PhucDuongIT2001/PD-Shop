@@ -4,7 +4,7 @@ test.describe('Login Page Tests', () => {
   
   test.beforeEach(async ({ page }) => {
     // Truy cập vào trang đăng nhập của React App
-    await page.goto('http://localhost:5173/login');
+    await page.goto('http://localhost:5174/login');
   });
 
   test('Giao diện hiển thị đúng tiêu đề và các trường nhập liệu', async ({ page }) => {

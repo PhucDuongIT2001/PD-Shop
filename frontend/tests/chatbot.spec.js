@@ -4,7 +4,7 @@ test.describe('AI Chatbot UI Tests', () => {
 
   test.beforeEach(async ({ page }) => {
     // Đăng nhập tài khoản khách hàng trước khi vào chat
-    await page.goto('http://localhost:5173/login');
+    await page.goto('http://localhost:5174/login');
     const emailInput = page.locator('input[name="usernameOrEmail"]');
     const passwordInput = page.locator('input[name="password"]');
     const submitBtn = page.locator('button[type="submit"]');
@@ -14,7 +14,7 @@ test.describe('AI Chatbot UI Tests', () => {
     await submitBtn.click();
 
     // Chờ chuyển hướng về trang chủ thành công
-    await page.waitForURL('http://localhost:5173/');
+    await page.waitForURL('http://localhost:5174/');
   });
 
   test('Kiểm tra nút mở khung chat và gửi câu hỏi tư vấn AI', async ({ page }) => {

@@ -4,16 +4,16 @@ test.describe('Cart Page Tests', () => {
 
   test.beforeEach(async ({ page }) => {
     // Đăng nhập khách hàng trước khi tương tác giỏ hàng
-    await page.goto('http://localhost:5173/login');
+    await page.goto('http://localhost:5174/login');
     await page.locator('input[name="usernameOrEmail"]').fill('customer@pdshop.com');
     await page.locator('input[name="password"]').fill('customer123');
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL('http://localhost:5173/');
+    await page.waitForURL('http://localhost:5174/');
   });
 
   test('Thêm sản phẩm vào giỏ hàng và thay đổi số lượng', async ({ page }) => {
     // 1. Truy cập trang danh sách sản phẩm
-    await page.goto('http://localhost:5173/products');
+    await page.goto('http://localhost:5174/products');
     
     // Đợi sản phẩm hiển thị và click sản phẩm đầu tiên
     const firstProduct = page.locator('.product-card').first();
@@ -29,7 +29,7 @@ test.describe('Cart Page Tests', () => {
     await expect(page.locator('text=Đã thêm vào giỏ hàng')).toBeVisible();
 
     // 3. Vào trang giỏ hàng
-    await page.goto('http://localhost:5173/cart');
+    await page.goto('http://localhost:5174/cart');
     await expect(page.locator('h1:has-text("Giỏ hàng")')).toBeVisible();
 
     // 4. Kiểm tra tăng số lượng sản phẩm lên 2
@@ -45,7 +45,7 @@ test.describe('Cart Page Tests', () => {
   });
 
   test('Xóa sản phẩm khỏi giỏ hàng', async ({ page }) => {
-    await page.goto('http://localhost:5173/cart');
+    await page.goto('http://localhost:5174/cart');
     
     // Nếu có sản phẩm trong giỏ hàng, bấm nút Xóa
     const removeBtn = page.locator('button.remove-cart-item-btn').first();

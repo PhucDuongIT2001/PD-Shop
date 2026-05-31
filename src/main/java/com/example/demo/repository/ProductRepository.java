@@ -20,15 +20,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    @Query("SELECT p FROM Product p WHERE p.deleted = false " +
+    @Query("SELECT p FROM Product p " +
+           "LEFT JOIN p.category c " +
+           "LEFT JOIN p.brand b " +
+           "WHERE p.deleted = false " +
            "AND p.status = com.example.demo.entity.enums.ProductStatus.ACTIVE " +
            "AND (:keyword IS NULL OR (" +
            "  LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "  LOWER(p.category.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "  LOWER(p.brand.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "  LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "  LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "  LOWER(p.shortDescription) LIKE LOWER(CONCAT('%', :keyword, '%')))) " +
-           "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
-           "AND (:brandId IS NULL OR p.brand.id = :brandId) " +
+           "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+           "AND (:brandId IS NULL OR b.id = :brandId) " +
            "AND (:isNew IS NULL OR :isNew = false OR p.createdAt >= :thirtyDaysAgo) " +
            "AND (:minPrice IS NULL OR p.price >= :minPrice) " +
            "AND (:maxPrice IS NULL OR p.price <= :maxPrice)")
@@ -40,6 +43,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                  @org.springframework.data.repository.query.Param("minPrice") Double minPrice,
                                  @org.springframework.data.repository.query.Param("maxPrice") Double maxPrice,
                                  Pageable pageable);
+
 
     List<Product> findByCategoryId(Long categoryId);
 

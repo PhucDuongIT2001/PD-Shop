@@ -350,7 +350,7 @@ const AdminProducts = () => {
                   <td className="px-8 py-5">
                     {(() => {
                       const stock = product.quantity || product.stock || product.stockQuantity || 0;
-                      if (product.status === 'HIDDEN') {
+                      if (product.status === 'INACTIVE' || product.status === 'HIDDEN') {
                         return (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[9px] font-black uppercase italic tracking-widest">
                             <div className="w-1.5 h-1.5 bg-slate-600 rounded-full"></div>
@@ -437,8 +437,7 @@ const AdminProducts = () => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Trạng thái</label>
                   <select value={newProduct.status} onChange={e => setNewProduct({...newProduct, status: e.target.value})} className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500/20 outline-none font-medium">
                     <option value="ACTIVE">Đang bán (Active)</option>
-                    <option value="OUT_OF_STOCK">Hết hàng (Out of Stock)</option>
-                    <option value="HIDDEN">Ẩn sản phẩm (Hidden)</option>
+                    <option value="INACTIVE">Ẩn sản phẩm (Inactive)</option>
                   </select>
                 </div>
               </div>
@@ -536,8 +535,7 @@ const AdminProducts = () => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Trạng thái</label>
                   <select value={editingProduct.status} onChange={e => setEditingProduct({...editingProduct, status: e.target.value})} className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500/20 outline-none font-medium">
                     <option value="ACTIVE">Đang bán (Active)</option>
-                    <option value="OUT_OF_STOCK">Hết hàng (Out of Stock)</option>
-                    <option value="HIDDEN">Ẩn sản phẩm (Hidden)</option>
+                    <option value="INACTIVE">Ẩn sản phẩm (Inactive)</option>
                   </select>
                 </div>
               </div>

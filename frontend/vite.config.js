@@ -7,15 +7,15 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://47.129.213.238.nip.io',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/oauth2': {
-        target: 'http://47.129.213.238.nip.io',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/login/oauth2/code': {
-        target: 'http://47.129.213.238.nip.io',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       }
     }
