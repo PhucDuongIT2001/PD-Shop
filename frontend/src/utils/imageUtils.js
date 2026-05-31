@@ -6,8 +6,17 @@
  */
 export const getProductImageUrl = (thumbnail, fallback = 'https://via.placeholder.com/400x400?text=No+Image') => {
   if (!thumbnail) return fallback;
-  if (thumbnail.startsWith('http://') || thumbnail.startsWith('https://')) {
-    return thumbnail;
+  
+  let cleanUrl = thumbnail;
+  if (typeof cleanUrl === 'string' && cleanUrl.includes('localhost:8080')) {
+    cleanUrl = cleanUrl.replace(/https?:\/\/localhost:8080/, '');
   }
-  return `/uploads/${thumbnail}`;
+
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl;
+  }
+  if (cleanUrl.startsWith('/uploads/') || cleanUrl.startsWith('uploads/')) {
+    return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
+  }
+  return `/uploads/${cleanUrl}`;
 };

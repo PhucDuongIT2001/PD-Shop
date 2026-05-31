@@ -32,6 +32,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
 
 		<!-- THYMELEAF -->
 		<dependency>
@@ -85,6 +89,16 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- FLYWAY -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
+
 		<!-- SECURITY -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -130,6 +144,13 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<version>5.2.5</version>
+		</dependency>
+
+		<!-- AWS S3 SDK -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>2.25.15</version>
 		</dependency>
 
 		<!-- TEST -->

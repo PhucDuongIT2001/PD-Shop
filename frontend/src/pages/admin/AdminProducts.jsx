@@ -12,6 +12,7 @@ const AdminProducts = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [filterType, setFilterType] = useState('ALL'); // 'ALL', 'OUT_OF_STOCK', 'LOW_STOCK', 'ACTIVE'
   const importFileRef = useRef(null);
 
   useEffect(() => {
@@ -199,9 +200,28 @@ const AdminProducts = () => {
     }
   };
 
-  const filteredProducts = productList.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = productList.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const stock = p.quantity || p.stock || p.stockQuantity || 0;
+    
+    let matchesType = true;
+    if (filterType === 'OUT_OF_STOCK') {
+      matchesType = stock === 0;
+    } else if (filterType === 'LOW_STOCK') {
+      matchesType = stock > 0 && stock <= 10;
+    } else if (filterType === 'ACTIVE') {
+      matchesType = p.status === 'ACTIVE';
+    }
+    
+    return matchesSearch && matchesType;
+  });
+
+  const outOfStockCount = productList.filter(p => (p.quantity || p.stock || p.stockQuantity || 0) === 0).length;
+  const lowStockCount = productList.filter(p => {
+    const stock = p.quantity || p.stock || p.stockQuantity || 0;
+    return stock > 0 && stock <= 10;
+  }).length;
+  const activeCount = productList.filter(p => p.status === 'ACTIVE').length;
 
   return (
     <div className="space-y-8">
@@ -241,13 +261,18 @@ const AdminProducts = () => {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
         {[
-          { label: 'Hết hàng', count: 12, icon: AlertCircle, color: 'text-red-600 bg-red-100' },
-          { label: 'Sắp hết hàng', count: 45, icon: Boxes, color: 'text-amber-600 bg-amber-100' },
-          { label: 'Đang hoạt động', count: productList.length, icon: Boxes, color: 'text-blue-600 bg-blue-100' },
+          { id: 'ALL', label: 'Tất cả', count: productList.length, icon: Boxes, color: 'text-slate-600 bg-slate-100' },
+          { id: 'OUT_OF_STOCK', label: 'Hết hàng', count: outOfStockCount, icon: AlertCircle, color: 'text-red-600 bg-red-100' },
+          { id: 'LOW_STOCK', label: 'Sắp hết hàng', count: lowStockCount, icon: AlertCircle, color: 'text-amber-600 bg-amber-100' },
+          { id: 'ACTIVE', label: 'Đang hoạt động', count: activeCount, icon: Boxes, color: 'text-blue-600 bg-blue-100' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 flex items-center gap-4">
+          <div 
+            key={i} 
+            onClick={() => setFilterType(stat.id)}
+            className={`bg-white p-6 rounded-2xl border flex items-center gap-4 cursor-pointer transition-all hover:shadow-md ${filterType === stat.id ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-100 hover:border-blue-200'}`}
+          >
             <div className={`p-3 rounded-xl ${stat.color}`}>
               <stat.icon className="w-6 h-6" />
             </div>
@@ -323,10 +348,39 @@ const AdminProducts = () => {
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-[9px] font-black uppercase italic tracking-widest">
-                      <div className="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></div>
-                      Đang bán
-                    </span>
+                    {(() => {
+                      const stock = product.quantity || product.stock || product.stockQuantity || 0;
+                      if (product.status === 'HIDDEN') {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[9px] font-black uppercase italic tracking-widest">
+                            <div className="w-1.5 h-1.5 bg-slate-600 rounded-full"></div>
+                            Đã ẩn
+                          </span>
+                        );
+                      }
+                      if (stock === 0 || product.status === 'OUT_OF_STOCK') {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-[9px] font-black uppercase italic tracking-widest">
+                            <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></div>
+                            Hết hàng
+                          </span>
+                        );
+                      }
+                      if (stock > 0 && stock <= 10) {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[9px] font-black uppercase italic tracking-widest">
+                            <div className="w-1.5 h-1.5 bg-amber-600 rounded-full animate-pulse"></div>
+                            Sắp hết
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-[9px] font-black uppercase italic tracking-widest">
+                          <div className="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></div>
+                          Đang bán
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end gap-2">

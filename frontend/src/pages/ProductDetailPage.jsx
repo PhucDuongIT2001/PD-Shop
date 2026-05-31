@@ -240,8 +240,8 @@ const ProductDetailPage = () => {
               <div className="relative w-full h-[400px]">
                 <model-viewer
                   ref={modelRef}
-                  src={arAsset.modelGlbUrl}
-                  ios-src={arAsset.modelUsdzUrl}
+                  src={arAsset.modelGlbUrl?.startsWith('http') || arAsset.modelGlbUrl?.startsWith('/') ? arAsset.modelGlbUrl : `/uploads/${arAsset.modelGlbUrl}`}
+                  ios-src={arAsset.modelUsdzUrl?.startsWith('http') || arAsset.modelUsdzUrl?.startsWith('/') ? arAsset.modelUsdzUrl : `/uploads/${arAsset.modelUsdzUrl}`}
                   environment-image={arAsset.environmentMapUrl || ''}
                   alt={product.name}
                   ar
@@ -440,21 +440,78 @@ const ProductDetailPage = () => {
             <div className="space-y-3">
               {product.fullSpecifications ? (
                 <div className="text-sm text-slate-600 space-y-2">
-                  {product.fullSpecifications.split('\n').map((spec, i) => {
-                    const parts = spec.split(':');
-                    if (parts.length > 1) {
-                      return (
-                        <div key={i} className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
-                          <span className="font-bold text-slate-800">{parts[0].trim()}</span>
-                          <span className="col-span-2 text-slate-600">{parts.slice(1).join(':').trim()}</span>
-                        </div>
-                      );
-                    }
-                    return <p key={i} className="py-1">{spec}</p>;
-                  })}
+                  {(product.fullSpecifications.includes('\n')
+                    ? product.fullSpecifications.split('\n')
+                    : product.fullSpecifications.split(';')
+                  )
+                    .map(spec => spec.trim())
+                    .filter(spec => spec.length > 0)
+                    .map((spec, i) => {
+                      const parts = spec.split(':');
+                      if (parts.length > 1) {
+                        return (
+                          <div key={i} className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
+                            <span className="font-bold text-slate-800">{parts[0].trim()}</span>
+                            <span className="col-span-2 text-slate-600">{parts.slice(1).join(':').trim()}</span>
+                          </div>
+                        );
+                      }
+                      return <p key={i} className="py-1">{spec}</p>;
+                    })}
                 </div>
-              ) : (
+              ) : !arAsset ? (
                 <p className="text-sm text-slate-400 italic">Đang cập nhật thông số kỹ thuật...</p>
+              ) : null}
+
+              {arAsset && (
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-4 italic">
+                    ✦ Thông số 3D & Thực tế ảo (AR)
+                  </span>
+                  <div className="text-sm text-slate-600 space-y-2">
+                    <div className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
+                      <span className="font-bold text-slate-800">Trải nghiệm AR</span>
+                      <span className="col-span-2 text-green-600 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" /> Hỗ trợ xem 3D / AR
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
+                      <span className="font-bold text-slate-800">Kiểu hiển thị</span>
+                      <span className="col-span-2 text-slate-600 capitalize">
+                        {arAsset.arType === 'floor' ? 'Đặt trên sàn nhà (Floor)' :
+                         arAsset.arType === 'wall' ? 'Treo trên tường (Wall)' :
+                         arAsset.arType === 'table' ? 'Đặt trên mặt bàn (Table)' :
+                         'Tự động nhận diện (Auto)'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
+                      <span className="font-bold text-slate-800">Tỷ lệ thu phóng</span>
+                      <span className="col-span-2 text-slate-600 font-medium">
+                        {arAsset.scaleFactor ? `${arAsset.scaleFactor * 100}% (x${arAsset.scaleFactor})` : '100% (x1.0)'}
+                      </span>
+                    </div>
+                    {arAsset.availableColors && (
+                      <div className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
+                        <span className="font-bold text-slate-800">Màu sắc 3D</span>
+                        <span className="col-span-2 text-slate-600">{arAsset.availableColors}</span>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
+                      <span className="font-bold text-slate-800">Mô hình GLB</span>
+                      <span className="col-span-2 text-blue-500 font-semibold truncate hover:underline cursor-pointer" onClick={() => window.open(getProductImageUrl(arAsset.modelGlbUrl), '_blank')}>
+                        {arAsset.modelGlbUrl?.substring(arAsset.modelGlbUrl.lastIndexOf('/') + 1) || 'Xem mô hình'}
+                      </span>
+                    </div>
+                    {arAsset.modelUsdzUrl && (
+                      <div className="grid grid-cols-3 py-2 border-b border-slate-50 last:border-0 gap-2">
+                        <span className="font-bold text-slate-800">Mô hình USDZ</span>
+                        <span className="col-span-2 text-blue-500 font-semibold truncate hover:underline cursor-pointer" onClick={() => window.open(getProductImageUrl(arAsset.modelUsdzUrl), '_blank')}>
+                          {arAsset.modelUsdzUrl?.substring(arAsset.modelUsdzUrl.lastIndexOf('/') + 1) || 'Xem mô hình'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>

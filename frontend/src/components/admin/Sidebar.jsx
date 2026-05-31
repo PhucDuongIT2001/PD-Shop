@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, ShoppingBag, Package, ListTree, Users, 
   Star, Ticket, Boxes, BarChart3, Bell, Settings, LogOut, ChevronLeft, ChevronRight,
-  DollarSign
+  DollarSign, Box
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +18,7 @@ const menuItems = [
   { icon: Ticket, label: 'Mã giảm giá', path: '/admin/coupons' },
   { icon: BarChart3, label: 'Doanh thu', path: '/admin/revenue' },
   { icon: DollarSign, label: 'Thanh toán', path: '/admin/transactions' },
+  { icon: Box, label: 'AR Assets', path: '/admin/ar-assets' },
 ];
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {

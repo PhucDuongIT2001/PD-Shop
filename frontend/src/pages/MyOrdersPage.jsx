@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
+import { getProductImageUrl } from '../utils/imageUtils';
 
 const MyOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -96,7 +97,7 @@ const MyOrdersPage = () => {
                 <div className="flex gap-4 overflow-x-auto pb-2">
                   {order.items?.map((item, idx) => (
                     <div key={idx} className="flex-shrink-0 flex items-center gap-3 bg-slate-50 p-2 rounded-xl pr-4 border border-slate-100">
-                      <img src={item.productThumbnail} alt={item.productName} className="w-12 h-12 object-cover rounded-lg" />
+                      <img src={getProductImageUrl(item.productThumbnail)} alt={item.productName} className="w-12 h-12 object-cover rounded-lg" />
                       <div>
                         <p className="font-semibold text-sm text-slate-800 line-clamp-1 max-w-[150px]">{item.productName}</p>
                         <p className="text-xs text-slate-500 font-medium">SL: {item.quantity}</p>

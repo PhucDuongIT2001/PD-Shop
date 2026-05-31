@@ -19,18 +19,22 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 @Service
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // Active SSE connections managed by userId
     private final Map<Long, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
-    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository) {
+    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository, SimpMessagingTemplate messagingTemplate) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     /**
@@ -110,11 +114,6 @@ public class NotificationService {
     }
 
     private void pushRealtime(Long userId, Notification notification) {
-        List<SseEmitter> userEmitters = emitters.get(userId);
-        if (userEmitters == null || userEmitters.isEmpty()) return;
-
-        List<SseEmitter> deadEmitters = new ArrayList<>();
-
         // Create simplified representation for pushing
         Map<String, Object> data = Map.of(
                 "id", notification.getId(),
@@ -126,6 +125,19 @@ public class NotificationService {
                 "createdAt", notification.getCreatedAt() != null ? notification.getCreatedAt().toString() : java.time.LocalDateTime.now().toString(),
                 "redirectUrl", notification.getRedirectUrl() != null ? notification.getRedirectUrl() : ""
         );
+
+        // Broadcast to WebSocket STOMP topics
+        try {
+            messagingTemplate.convertAndSend("/topic/notifications", data);
+            messagingTemplate.convertAndSend("/topic/notifications/" + userId, data);
+        } catch (Exception e) {
+            // Ignore/Log
+        }
+
+        List<SseEmitter> userEmitters = emitters.get(userId);
+        if (userEmitters == null || userEmitters.isEmpty()) return;
+
+        List<SseEmitter> deadEmitters = new ArrayList<>();
 
         for (SseEmitter emitter : userEmitters) {
             try {

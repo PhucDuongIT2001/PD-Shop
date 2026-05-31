@@ -9,6 +9,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import com.example.demo.service.FileStorageService;
 
 import java.text.Normalizer;
 import java.util.List;
@@ -20,16 +22,22 @@ import java.util.regex.Pattern;
 public class BrandServiceImpl implements BrandService {
 
     private final BrandRepository brandRepository;
+    private final FileStorageService fileStorageService;
 
-    public BrandServiceImpl(BrandRepository brandRepository) {
+    public BrandServiceImpl(BrandRepository brandRepository, FileStorageService fileStorageService) {
         this.brandRepository = brandRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
     @CacheEvict(value = "brands", allEntries = true)
-    public Brand createBrand(Brand brand) {
+    public Brand createBrand(Brand brand, MultipartFile image) {
         if (brandRepository.existsByName(brand.getName())) {
             throw new RuntimeException("Tên thương hiệu đã tồn tại");
+        }
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = fileStorageService.storeFile(image, "brands");
+            brand.setImage(imageUrl);
         }
         brand.setSlug(generateSlug(brand.getName()));
         return brandRepository.save(brand);
@@ -37,7 +45,7 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     @CacheEvict(value = "brands", allEntries = true)
-    public Brand updateBrand(Long id, Brand brand) {
+    public Brand updateBrand(Long id, Brand brand, MultipartFile image) {
         Brand existing = getBrandById(id);
         
         if (!existing.getName().equals(brand.getName()) && 
@@ -45,10 +53,14 @@ public class BrandServiceImpl implements BrandService {
             throw new RuntimeException("Tên thương hiệu mới đã tồn tại");
         }
         
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = fileStorageService.storeFile(image, "brands");
+            existing.setImage(imageUrl);
+        }
+        
         existing.setName(brand.getName());
         existing.setSlug(generateSlug(brand.getName()));
         existing.setDescription(brand.getDescription());
-        existing.setImage(brand.getImage());
         existing.setActive(brand.isActive());
         
         return brandRepository.save(existing);

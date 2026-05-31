@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 /**
  * REST endpoints for Admin to manage AR assets attached to products.
@@ -50,12 +52,23 @@ public class AdminArAssetController {
      *   "scaleFactor":   1.0
      * }
      */
-    @PutMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductArAssetDto> upsertArAsset(
             @PathVariable Long productId,
-            @Valid @RequestBody ProductArAssetRequestDto requestDto) {
+            @RequestParam(value = "arType", defaultValue = "auto") String arType,
+            @RequestParam(value = "scaleFactor", defaultValue = "1.0") Double scaleFactor,
+            @RequestParam(value = "modelGlbUrl", required = false) String modelGlbUrl,
+            @RequestParam(value = "modelUsdzUrl", required = false) String modelUsdzUrl,
+            @RequestParam(value = "glbFile", required = false) MultipartFile glbFile,
+            @RequestParam(value = "usdzFile", required = false) MultipartFile usdzFile) {
 
-        ProductArAssetDto saved = arAssetService.upsertArAsset(productId, requestDto);
+        ProductArAssetRequestDto requestDto = new ProductArAssetRequestDto();
+        requestDto.setArType(arType);
+        requestDto.setScaleFactor(scaleFactor);
+        requestDto.setModelGlbUrl(modelGlbUrl);
+        requestDto.setModelUsdzUrl(modelUsdzUrl);
+
+        ProductArAssetDto saved = arAssetService.upsertArAssetWithFiles(productId, requestDto, glbFile, usdzFile);
         return ResponseEntity.ok(saved);
     }
 

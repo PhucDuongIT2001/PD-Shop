@@ -57,14 +57,24 @@ spring:
           starttls:
             enable: true
 
+# AWS S3 Configuration
+aws:
+  s3:
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    bucket-name: ${AWS_S3_BUCKET:}
+    region: ${AWS_S3_REGION:ap-southeast-1}
+
 # Custom Application Properties
 file:
   upload-dir: ${UPLOAD_DIR:uploads}
+  base-url: ${APP_BASE_URL:http://localhost:8080}
 
 pdshop:
   app:
     jwtSecret: ${JWT_SECRET:default_jwt_super_secret_key_1234567890!}
     jwtExpirationMs: ${JWT_EXPIRATION_MS:86400000}
+    frontendUrl: ${FRONTEND_URL:http://localhost:5173}
 
 # VNPAY Payment Gateway Configuration (Sandbox)
 vnpay:
@@ -84,5 +94,6 @@ logging:
     name: app-debug.log
   level:
     org.springframework.web: INFO
+    org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE

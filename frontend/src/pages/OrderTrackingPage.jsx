@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
+import { getProductImageUrl } from '../utils/imageUtils';
 
 const OrderTrackingPage = () => {
   const [orderId, setOrderId] = useState('');
@@ -167,7 +168,7 @@ const OrderTrackingPage = () => {
                   <div key={item.id} className="flex items-center gap-4 p-4 border rounded-xl hover:bg-gray-50 transition-colors">
                     <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       {item.productThumbnail ? (
-                        <img src={`http://localhost:8080/images/products/${item.productThumbnail}`} alt={item.productName} className="w-full h-full object-cover" />
+                        <img src={getProductImageUrl(item.productThumbnail)} alt={item.productName} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">No Img</div>
                       )}

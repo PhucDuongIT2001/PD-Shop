@@ -13,6 +13,7 @@ import Footer from './components/layout/Footer';
 // Pages
 import Hero from './components/home/Hero';
 import Categories from './components/home/Categories';
+import Brands from './components/home/Brands';
 import ProductGrid from './components/products/ProductGrid';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -31,9 +32,11 @@ import AdminRevenue from './pages/admin/AdminRevenue';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminTransactions from './pages/admin/AdminTransactions';
+import AdminArAssets from './pages/admin/AdminArAssets';
 import CartPage from './pages/CartPage';
 import ChatPage from './pages/ChatPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import ARPlannerPage from './pages/ARPlannerPage';
 import CheckoutPage from './pages/CheckoutPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
@@ -48,6 +51,7 @@ const Home = () => (
   <main className="flex-grow">
     <Hero />
     <Categories />
+    <Brands />
     <div className="space-y-4">
       <ProductGrid title="Sản phẩm mới nhất" />
       <ProductGrid title="Gaming Laptops" category="Laptop" />
@@ -200,6 +204,12 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/ar-planner" element={
+            <ProtectedRoute>
+              <ARPlannerPage />
+            </ProtectedRoute>
+          } />
+
           {/* Admin Routes */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ADMIN']}>
@@ -216,6 +226,7 @@ function App() {
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="transactions" element={<AdminTransactions />} />
+            <Route path="ar-assets" element={<AdminArAssets />} />
           </Route>
 
           {/* Protected Staff Routes */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, User, Menu, X, Phone, MapPin, LogOut, Settings, LayoutDashboard, ShoppingBag, Trash2 } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Phone, MapPin, LogOut, Settings, LayoutDashboard, ShoppingBag, Trash2, Box } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -323,7 +323,7 @@ const Header = () => {
                             {cart.items.filter(i => !i.saveForLater).map(item => (
                               <div key={item.id} className="flex gap-3 group/item">
                                 <div className="w-16 h-16 bg-slate-50 rounded-xl shrink-0 overflow-hidden">
-                                  <img src={item.productThumbnail} className="w-full h-full object-contain mix-blend-multiply" alt="" />
+                                  <img src={getProductImageUrl(item.productThumbnail)} className="w-full h-full object-contain mix-blend-multiply" alt="" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <h5 className="text-xs font-bold text-slate-800 truncate group-hover/item:text-blue-600 transition-colors">{item.productName}</h5>
@@ -418,6 +418,15 @@ const Header = () => {
                 </Link>
               </li>
             ))}
+            <li className="ml-auto">
+              <Link
+                to="/ar-planner"
+                className="flex items-center gap-2 text-sm font-black text-blue-600 hover:text-blue-700 whitespace-nowrap transition-all uppercase tracking-tight italic bg-blue-50 px-4 py-1.5 rounded-full border border-blue-200 shadow-sm"
+              >
+                <Box className="w-4 h-4" />
+                Thiết kế phòng AR
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>

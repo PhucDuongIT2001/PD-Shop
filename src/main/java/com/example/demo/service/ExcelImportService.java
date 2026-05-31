@@ -74,12 +74,25 @@ public class ExcelImportService {
                 throw new IllegalArgumentException("File Excel không có sheet nào.");
             }
 
-            // Row 0 is the header – start from row 1
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                throw new IllegalArgumentException("Không tìm thấy dòng tiêu đề (Dòng 1).");
+            }
+
+            // Build dynamic header map
+            java.util.Map<String, Integer> headerMap = new java.util.HashMap<>();
+            for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+                Cell cell = headerRow.getCell(c, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                if (cell != null && cell.getCellType() == CellType.STRING) {
+                    headerMap.put(cell.getStringCellValue().trim().toLowerCase(), c);
+                }
+            }
+
             for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
                 Row row = sheet.getRow(rowIdx);
                 if (row == null || isRowEmpty(row)) continue;
 
-                Product product = mapRowToProduct(row, rowIdx + 1);
+                Product product = mapRowToProduct(row, headerMap);
                 if (product != null) {
                     saved.add(productRepository.save(product));
                 }
@@ -93,52 +106,102 @@ public class ExcelImportService {
         return saved;
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
-    private Product mapRowToProduct(Row row, int displayRow) {
-        String name = getCellString(row, 0);
-        if (name == null || name.isBlank()) {
-            return null; // skip rows without a product name
+    private Product mapRowToProduct(Row row, java.util.Map<String, Integer> headerMap) {
+        // Find indices
+        Integer idxName = getColIdx(headerMap, "name", "tên sản phẩm", "tensanpham", "tên", "shortdescription");
+        Integer idxPrice = getColIdx(headerMap, "price", "giá bán", "giá", "gia");
+        
+        if (idxName == null || idxPrice == null) {
+            return null; // required fields missing
         }
 
-        Double price = getCellDouble(row, 1);
-        if (price == null || price <= 0) {
-            return null; // skip rows without a valid price
+        String name = getCellString(row, idxName);
+        Double price = getCellDouble(row, idxPrice);
+
+        if (name == null || name.isBlank() || price == null || price <= 0) {
+            return null;
         }
 
-        Product product = new Product();
+        Integer idxSku = getColIdx(headerMap, "sku", "mã sản phẩm");
+        String sku = null;
+        if (idxSku != null) {
+            String s = getCellString(row, idxSku);
+            if (s != null && !s.isBlank()) sku = s.trim();
+        }
+
+        Product product = null;
+        if (sku != null) {
+            product = productRepository.findBySku(sku).orElse(null);
+        }
+
+        if (product == null) {
+            product = new Product();
+            product.setSku(sku);
+            product.setSlug(generateUniqueSlug(name, null));
+        }
+        
         product.setName(name.trim());
         product.setPrice(price);
-        product.setSlug(generateUniqueSlug(name, null));
 
-        // Tồn kho
-        Double stockRaw = getCellDouble(row, 2);
-        product.setQuantity(stockRaw != null ? stockRaw.intValue() : 0);
+        Integer idxBasePrice = getColIdx(headerMap, "baseprice", "giá gốc");
+        if (idxBasePrice != null) product.setBasePrice(getCellDouble(row, idxBasePrice));
 
-        // SKU
-        String sku = getCellString(row, 3);
-        if (sku != null && !sku.isBlank()) {
-            product.setSku(sku.trim());
+        Integer idxQuantity = getColIdx(headerMap, "quantity", "tồn kho", "số lượng");
+        Double qty = idxQuantity != null ? getCellDouble(row, idxQuantity) : null;
+        product.setQuantity(qty != null ? qty.intValue() : 0);
+
+        Integer idxLowStock = getColIdx(headerMap, "lowstockthreshold", "ngưỡng sắp hết hàng");
+        Double lowStock = idxLowStock != null ? getCellDouble(row, idxLowStock) : null;
+        if (lowStock != null) product.setLowStockThreshold(lowStock.intValue());
+
+        Integer idxCat = getColIdx(headerMap, "category_name", "category", "danh mục");
+        if (idxCat != null) {
+            String catName = getCellString(row, idxCat);
+            if (catName != null && !catName.isBlank()) {
+                categoryRepository.findByNameIgnoreCase(catName.trim()).ifPresent(product::setCategory);
+            }
         }
 
-        // Danh mục
-        String categoryName = getCellString(row, 4);
-        if (categoryName != null && !categoryName.isBlank()) {
-            categoryRepository.findByNameIgnoreCase(categoryName.trim())
-                    .ifPresent(product::setCategory);
+        Integer idxBrand = getColIdx(headerMap, "brand_name", "brand", "thương hiệu");
+        if (idxBrand != null) {
+            String brandName = getCellString(row, idxBrand);
+            if (brandName != null && !brandName.isBlank()) {
+                brandRepository.findByNameIgnoreCase(brandName.trim()).ifPresent(product::setBrand);
+            }
         }
 
-        // Thương hiệu
-        String brandName = getCellString(row, 5);
-        if (brandName != null && !brandName.isBlank()) {
-            brandRepository.findByNameIgnoreCase(brandName.trim())
-                    .ifPresent(product::setBrand);
+        Integer idxDesc = getColIdx(headerMap, "description", "mô tả");
+        if (idxDesc != null) {
+            String desc = getCellString(row, idxDesc);
+            if (desc != null && !desc.isBlank()) product.setDescription(desc.trim());
         }
 
-        // Mô tả
-        String description = getCellString(row, 6);
-        if (description != null && !description.isBlank()) {
-            product.setDescription(description.trim());
+        Integer idxShortDesc = getColIdx(headerMap, "shortdescription", "mô tả ngắn");
+        if (idxShortDesc != null && !idxShortDesc.equals(idxName)) {
+            String sDesc = getCellString(row, idxShortDesc);
+            if (sDesc != null && !sDesc.isBlank()) product.setShortDescription(sDesc.trim());
+        }
+
+        Integer idxThumb = getColIdx(headerMap, "thumbnail", "hình ảnh");
+        if (idxThumb != null) {
+            String thumb = getCellString(row, idxThumb);
+            if (thumb != null && !thumb.isBlank()) product.setThumbnail(thumb.trim());
+        }
+
+        Integer idxWarranty = getColIdx(headerMap, "warrantyperiod", "bảo hành");
+        Double warranty = idxWarranty != null ? getCellDouble(row, idxWarranty) : null;
+        if (warranty != null) product.setWarrantyPeriod(warranty.intValue());
+
+        Integer idxIsNew = getColIdx(headerMap, "isnew", "hàng mới");
+        if (idxIsNew != null) {
+            String isNew = getCellString(row, idxIsNew);
+            if (isNew != null && !isNew.isBlank()) product.setIsNew(isNew.trim());
+        }
+
+        Integer idxSpecs = getColIdx(headerMap, "fullspecifications", "thông số");
+        if (idxSpecs != null) {
+            String specs = getCellString(row, idxSpecs);
+            if (specs != null && !specs.isBlank()) product.setFullSpecifications(specs.trim());
         }
 
         product.setStatus(ProductStatus.ACTIVE);
@@ -147,7 +210,13 @@ public class ExcelImportService {
         return product;
     }
 
-    /** Returns the string value of a cell regardless of its type. */
+    private Integer getColIdx(java.util.Map<String, Integer> map, String... possibleNames) {
+        for (String name : possibleNames) {
+            if (map.containsKey(name)) return map.get(name);
+        }
+        return null;
+    }
+
     private String getCellString(Row row, int col) {
         Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
         if (cell == null) return null;
@@ -155,19 +224,13 @@ public class ExcelImportService {
             case STRING  -> cell.getStringCellValue();
             case NUMERIC -> {
                 double d = cell.getNumericCellValue();
-                // Avoid "1.0" for whole numbers
                 yield (d == Math.floor(d)) ? String.valueOf((long) d) : String.valueOf(d);
             }
             case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            case FORMULA -> {
-                try { yield cell.getStringCellValue(); }
-                catch (Exception e) { yield String.valueOf(cell.getNumericCellValue()); }
-            }
             default -> null;
         };
     }
 
-    /** Returns the numeric value of a cell, or null if not parseable. */
     private Double getCellDouble(Row row, int col) {
         Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
         if (cell == null) return null;

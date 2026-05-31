@@ -24,6 +24,7 @@ public interface ProductMapper {
     @Mapping(source = "warrantyPeriod",  target = "warrantyPeriod")
     @Mapping(source = "isNew",           target = "isNew")
     @Mapping(source = "sku",             target = "sku")
+    @Mapping(source = "fullSpecifications", target = "fullSpecifications")
     ProductDto toProductDto(Product product);
 
     // For creating/updating product from DTO

@@ -1,10 +1,12 @@
 package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "product_variants")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ProductVariant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

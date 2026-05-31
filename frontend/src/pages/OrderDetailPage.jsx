@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
+import { getProductImageUrl } from '../utils/imageUtils';
 
 const OrderDetailPage = () => {
   const { id } = useParams();
@@ -117,7 +118,7 @@ const OrderDetailPage = () => {
             <div className="space-y-4">
               {order.items?.map((item, idx) => (
                 <div key={idx} className="flex gap-4 p-4 border border-slate-100 rounded-2xl items-center">
-                  <img src={item.productThumbnail} alt={item.productName} className="w-20 h-20 object-cover rounded-xl bg-slate-50" />
+                  <img src={getProductImageUrl(item.productThumbnail)} alt={item.productName} className="w-20 h-20 object-cover rounded-xl bg-slate-50" />
                   <div className="flex-grow">
                     <Link to={`/product/${item.productId}`} className="font-bold text-slate-800 hover:text-primary transition-colors text-lg line-clamp-1">
                       {item.productName}

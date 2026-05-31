@@ -7,8 +7,11 @@ import com.example.demo.entity.ProductArAsset;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.ProductArAssetRepository;
 import com.example.demo.repository.ProductRepository;
+import com.example.demo.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -23,12 +26,15 @@ public class ProductArAssetService {
 
     private final ProductArAssetRepository arAssetRepository;
     private final ProductRepository productRepository;
+    private final FileStorageService fileStorageService;
 
     @Autowired
     public ProductArAssetService(ProductArAssetRepository arAssetRepository,
-                                 ProductRepository productRepository) {
+                                 ProductRepository productRepository,
+                                 FileStorageService fileStorageService) {
         this.arAssetRepository = arAssetRepository;
         this.productRepository = productRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     // -----------------------------------------------------------------------
@@ -63,6 +69,19 @@ public class ProductArAssetService {
         return toDto(saved);
     }
 
+    @Transactional
+    public ProductArAssetDto upsertArAssetWithFiles(Long productId, ProductArAssetRequestDto requestDto, MultipartFile glbFile, MultipartFile usdzFile) {
+        if (glbFile != null && !glbFile.isEmpty()) {
+            String url = fileStorageService.storeFile(glbFile, "ar-models");
+            requestDto.setModelGlbUrl(url);
+        }
+        if (usdzFile != null && !usdzFile.isEmpty()) {
+            String url = fileStorageService.storeFile(usdzFile, "ar-models");
+            requestDto.setModelUsdzUrl(url);
+        }
+        return upsertArAsset(productId, requestDto);
+    }
+
     /**
      * Retrieve the AR asset for a product.
      *
@@ -83,6 +102,17 @@ public class ProductArAssetService {
                         "No AR asset found for product id " + productId));
 
         return toDto(asset);
+    }
+
+    /**
+     * Retrieve all AR assets currently configured.
+     * Used by the AR room planner.
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<ProductArAssetDto> getAllArAssets() {
+        return arAssetRepository.findAll().stream()
+                .map(this::toDto)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     /**
@@ -166,6 +196,8 @@ public class ProductArAssetService {
                 asset.getId(),
                 asset.getProduct().getId(),
                 asset.getProduct().getName(),
+                asset.getProduct().getPrice(),
+                asset.getProduct().getThumbnail(),
                 asset.getModelGlbUrl(),
                 asset.getModelUsdzUrl(),
                 asset.getArType(),

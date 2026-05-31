@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @RestController
 @RequestMapping("/api/auth")
 public class RestAuthController {
@@ -32,6 +34,9 @@ public class RestAuthController {
 
     @Autowired
     private com.example.demo.service.EmailService emailService;
+
+    @Value("${pdshop.app.frontendUrl}")
+    private String frontendUrl;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody Map<String, String> loginRequest) {
@@ -115,7 +120,7 @@ public class RestAuthController {
                 
                 String origin = httpRequest.getHeader("Origin");
                 if (origin == null || origin.isEmpty()) {
-                    origin = "http://localhost:5173";
+                    origin = frontendUrl;
                 }
                 String resetUrl = origin + "/reset-password?token=" + token;
                 

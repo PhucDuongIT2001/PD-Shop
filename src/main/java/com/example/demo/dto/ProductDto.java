@@ -19,6 +19,7 @@ public class ProductDto {
     private Long categoryId;
     private Long brandId;
     private String brandName;
+    private String fullSpecifications;
 
     public ProductDto() {}
 
@@ -28,7 +29,7 @@ public class ProductDto {
                       String thumbnail, String description, String shortDescription,
                       Integer warrantyPeriod, String isNew,
                       String status, String categoryName, Long categoryId,
-                      Long brandId, String brandName) {
+                      Long brandId, String brandName, String fullSpecifications) {
         this.id = id;
         this.name = name;
         this.slug = slug;
@@ -47,6 +48,7 @@ public class ProductDto {
         this.categoryId = categoryId;
         this.brandId = brandId;
         this.brandName = brandName;
+        this.fullSpecifications = fullSpecifications;
     }
 
     // ── Getters & Setters ──────────────────────────────────────
@@ -104,4 +106,7 @@ public class ProductDto {
 
     public String getBrandName() { return brandName; }
     public void setBrandName(String brandName) { this.brandName = brandName; }
+
+    public String getFullSpecifications() { return fullSpecifications; }
+    public void setFullSpecifications(String fullSpecifications) { this.fullSpecifications = fullSpecifications; }
 }

@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -29,6 +30,9 @@ public class SecurityConfig {
     private final ObjectProvider<RateLimitFilter> rateLimitFilterProvider;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+
+    @Value("${pdshop.app.frontendUrl}")
+    private String frontendUrl;
 
     public SecurityConfig(ObjectProvider<AuthTokenFilter> authTokenFilterProvider,
                           ObjectProvider<RateLimitFilter> rateLimitFilterProvider,
@@ -51,7 +55,15 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(request -> {
                 CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"));
+                config.setAllowedOrigins(List.of(
+                    "http://localhost:5173",
+                    "http://localhost:5174",
+                    "http://localhost:5175",
+                    "http://localhost:3000",
+                    "http://47.129.213.238.nip.io",
+                    "http://47.129.213.238",
+                    frontendUrl
+                ));
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setAllowCredentials(true);
@@ -62,7 +74,8 @@ public class SecurityConfig {
                 response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
             }))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/auth/**", "/oauth2/**", "/ws/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/brands", "/api/brands/**").permitAll()
@@ -71,10 +84,14 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(authorization -> authorization
+                    .authorizationRequestRepository(new com.example.demo.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository())
+                )
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
                 .successHandler(customAuthenticationSuccessHandler)
+                .failureHandler(new com.example.demo.config.CustomAuthenticationFailureHandler())
             );
 
         rateLimitFilterProvider.ifAvailable(f ->

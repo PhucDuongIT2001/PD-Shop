@@ -18,14 +18,16 @@ const AdminBrands = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    image: '',
+    imageFile: null,
+    imagePreview: '',
     active: true
   });
 
   const [editFormData, setEditFormData] = useState({
     name: '',
     description: '',
-    image: '',
+    imageFile: null,
+    imagePreview: '',
     active: true
   });
 
@@ -56,8 +58,15 @@ const AdminBrands = () => {
   // Toggle active status
   const toggleActiveStatus = async (brand) => {
     try {
-      const updatedBrand = { ...brand, active: !brand.active };
-      await api.put(`/brands/${brand.id}`, updatedBrand);
+      const data = new FormData();
+      data.append('name', brand.name);
+      if (brand.description) data.append('description', brand.description);
+      data.append('active', !brand.active);
+      // We don't need to re-upload the image for status toggle
+      
+      await api.post(`/brands/${brand.id}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       toast.success(brand.active ? "Đã tạm ẩn thương hiệu" : "Đã kích hoạt thương hiệu");
       setBrands(brands.map(b => 
         b.id === brand.id ? { ...b, active: !b.active } : b
@@ -79,15 +88,22 @@ const AdminBrands = () => {
     }
   };
 
-  // Handle Add Form Submit
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/brands', formData);
+      const data = new FormData();
+      data.append('name', formData.name);
+      if (formData.description) data.append('description', formData.description);
+      data.append('active', formData.active);
+      if (formData.imageFile) data.append('image', formData.imageFile);
+      
+      await api.post('/brands', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       toast.success("Thêm thương hiệu thành công!");
       setIsAddModalOpen(false);
-      setFormData({ name: '', description: '', image: '', active: true });
+      setFormData({ name: '', description: '', imageFile: null, imagePreview: '', active: true });
       fetchBrands();
     } catch (error) {
       toast.error(error.response?.data?.message || "Lỗi khi tạo thương hiệu");
@@ -101,7 +117,15 @@ const AdminBrands = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.put(`/brands/${selectedBrand.id}`, editFormData);
+      const data = new FormData();
+      data.append('name', editFormData.name);
+      if (editFormData.description) data.append('description', editFormData.description);
+      data.append('active', editFormData.active);
+      if (editFormData.imageFile) data.append('image', editFormData.imageFile);
+      
+      await api.post(`/brands/${selectedBrand.id}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       toast.success("Cập nhật thương hiệu thành công!");
       setIsEditModalOpen(false);
       fetchBrands();
@@ -112,16 +136,31 @@ const AdminBrands = () => {
     }
   };
 
-  // Open edit modal and pre-fill form
   const openEditModal = (brand) => {
     setSelectedBrand(brand);
     setEditFormData({
       name: brand.name,
       description: brand.description || '',
-      image: brand.image || '',
+      imageFile: null,
+      imagePreview: brand.image || '',
       active: brand.active
     });
     setIsEditModalOpen(true);
+  };
+  
+  const handleFileChange = (e, isEdit = false) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (isEdit) {
+          setEditFormData({ ...editFormData, imageFile: file, imagePreview: reader.result });
+        } else {
+          setFormData({ ...formData, imageFile: file, imagePreview: reader.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -287,14 +326,18 @@ const AdminBrands = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">URL Logo hình ảnh</label>
-                  <input 
-                    type="text" 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium"
-                    placeholder="https://example.com/logo.png"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  />
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hình ảnh thương hiệu</label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      onChange={(e) => handleFileChange(e, false)}
+                    />
+                    {formData.imagePreview && (
+                      <img src={formData.imagePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
                   <input 
@@ -366,13 +409,18 @@ const AdminBrands = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">URL Logo hình ảnh</label>
-                  <input 
-                    type="text" 
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium"
-                    value={editFormData.image}
-                    onChange={(e) => setEditFormData({ ...editFormData, image: e.target.value })}
-                  />
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hình ảnh thương hiệu</label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      onChange={(e) => handleFileChange(e, true)}
+                    />
+                    {editFormData.imagePreview && (
+                      <img src={editFormData.imagePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
                   <input 

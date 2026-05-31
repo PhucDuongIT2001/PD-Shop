@@ -11,6 +11,12 @@ public class ProductArAssetDto {
     private Long productId;
     private String productName;
 
+    /** Product sale price (VND). Used by the AR Room Planner cost estimator. */
+    private Double productPrice;
+
+    /** Product thumbnail image URL. Used by the AR Room Planner sidebar. */
+    private String productThumbnail;
+
     /** URL to the .glb / .gltf file used by Android Scene Viewer and model-viewer. */
     private String modelGlbUrl;
 
@@ -36,6 +42,7 @@ public class ProductArAssetDto {
     public ProductArAssetDto() {}
 
     public ProductArAssetDto(Long id, Long productId, String productName,
+                             Double productPrice, String productThumbnail,
                              String modelGlbUrl, String modelUsdzUrl,
                              String arType, Double scaleFactor,
                              String environmentMapUrl, String availableColors,
@@ -43,6 +50,8 @@ public class ProductArAssetDto {
         this.id = id;
         this.productId = productId;
         this.productName = productName;
+        this.productPrice = productPrice;
+        this.productThumbnail = productThumbnail;
         this.modelGlbUrl = modelGlbUrl;
         this.modelUsdzUrl = modelUsdzUrl;
         this.arType = arType;
@@ -64,6 +73,12 @@ public class ProductArAssetDto {
 
     public String getProductName() { return productName; }
     public void setProductName(String productName) { this.productName = productName; }
+
+    public Double getProductPrice() { return productPrice; }
+    public void setProductPrice(Double productPrice) { this.productPrice = productPrice; }
+
+    public String getProductThumbnail() { return productThumbnail; }
+    public void setProductThumbnail(String productThumbnail) { this.productThumbnail = productThumbnail; }
 
     public String getModelGlbUrl() { return modelGlbUrl; }
     public void setModelGlbUrl(String modelGlbUrl) { this.modelGlbUrl = modelGlbUrl; }

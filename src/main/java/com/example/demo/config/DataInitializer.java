@@ -212,11 +212,11 @@ public class DataInitializer implements CommandLineRunner {
     private void seedUser(String username, String email, String password, Set<Role> roles) {
         userRepository.findByUsername(username).ifPresentOrElse(
             user -> {
-                if (!user.getEnabled()) {
-                    logger.info("  Enabling existing seeded user: {}", username);
-                    user.setEnabled(true);
-                    userRepository.save(user);
-                }
+                // Only reset password and enabled — do NOT touch roles to avoid Hibernate collection issues
+                logger.info("  Resetting password for seeded user: {}", username);
+                user.setPassword(passwordEncoder.encode(password));
+                user.setEnabled(true);
+                userRepository.save(user);
             },
             () -> {
                 logger.info("  Creating user: {}", username);
@@ -224,7 +224,7 @@ public class DataInitializer implements CommandLineRunner {
                 user.setUsername(username);
                 user.setEmail(email);
                 user.setPassword(passwordEncoder.encode(password));
-                user.setRoles(roles);
+                user.setRoles(new java.util.HashSet<>(roles));
                 user.setEnabled(true);
                 userRepository.save(user);
             }

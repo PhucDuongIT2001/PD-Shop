@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -55,20 +56,37 @@ public class BrandRestController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> createBrand(@RequestBody Brand brand) {
+    public ResponseEntity<?> createBrand(
+            @RequestParam("name") String name,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "active", defaultValue = "true") boolean active,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
-            Brand newBrand = brandService.createBrand(brand);
+            Brand brand = new Brand();
+            brand.setName(name);
+            brand.setDescription(description);
+            brand.setActive(active);
+            Brand newBrand = brandService.createBrand(brand, image);
             return ResponseEntity.ok(newBrand);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    @PutMapping("/{id}")
+    @PostMapping("/{id}") // Using POST to support multipart/form-data update
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<?> updateBrand(@PathVariable Long id, @RequestBody Brand brand) {
+    public ResponseEntity<?> updateBrand(
+            @PathVariable Long id,
+            @RequestParam("name") String name,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "active", defaultValue = "true") boolean active,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
-            Brand updated = brandService.updateBrand(id, brand);
+            Brand brand = new Brand();
+            brand.setName(name);
+            brand.setDescription(description);
+            brand.setActive(active);
+            Brand updated = brandService.updateBrand(id, brand, image);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));

@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import com.example.demo.entity.enums.ProductStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,6 +12,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "products")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product {
 
     @Id
@@ -89,6 +91,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ProductVariant> variants;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductArAsset> arAssets;
+
     public Product() {
     }
 
@@ -139,6 +144,8 @@ public class Product {
     public void setBrand(Brand brand) { this.brand = brand; }
     public List<ProductVariant> getVariants() { return variants; }
     public void setVariants(List<ProductVariant> variants) { this.variants = variants; }
+    public List<ProductArAsset> getArAssets() { return arAssets; }
+    public void setArAssets(List<ProductArAsset> arAssets) { this.arAssets = arAssets; }
 
     @Override
     public boolean equals(Object o) {
