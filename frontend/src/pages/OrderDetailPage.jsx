@@ -8,6 +8,24 @@ const OrderDetailPage = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+
+  const handleVNPayPayment = async () => {
+    try {
+      setPaying(true);
+      const res = await api.post(`/payment/vnpay/create?orderId=${id}`);
+      if (res.data.paymentUrl) {
+        window.location.href = res.data.paymentUrl;
+      } else {
+        toast.success(res.data.message || 'Link thanh toán đã được gửi vào email của bạn!');
+      }
+    } catch (error) {
+      console.error('Error generating payment url:', error);
+      toast.error(error.response?.data?.message || 'Không thể khởi tạo thanh toán VNPay');
+    } finally {
+      setPaying(false);
+    }
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -26,22 +44,30 @@ const OrderDetailPage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'UNCONFIRMED': return 'bg-orange-100 text-orange-850 border-orange-200';
       case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'PROCESSING': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'SHIPPED': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      case 'SHIPPED':
+      case 'SHIPPING': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'DELIVERED': return 'bg-green-100 text-green-800 border-green-200';
       case 'CANCELLED': return 'bg-red-100 text-red-800 border-red-200';
+      case 'PAID': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'FAILED': return 'bg-rose-100 text-rose-800 border-rose-200';
       default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
+      case 'UNCONFIRMED': return 'Chờ xác nhận Email';
       case 'PENDING': return 'Chờ xử lý';
       case 'PROCESSING': return 'Đang chuẩn bị';
-      case 'SHIPPED': return 'Đang giao hàng';
-      case 'DELIVERED': return 'Đã giao';
+      case 'SHIPPED':
+      case 'SHIPPING': return 'Đang giao hàng';
+      case 'DELIVERED': return 'Đã giao thành công';
       case 'CANCELLED': return 'Đã huỷ';
+      case 'PAID': return 'Đã thanh toán';
+      case 'FAILED': return 'Thanh toán thất bại';
       default: return status;
     }
   };
@@ -76,7 +102,7 @@ const OrderDetailPage = () => {
         <div className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-black text-slate-800">Đơn hàng #{order.id}</h1>
-            <p className="text-slate-500 font-medium mt-1">Ngày đặt: {new Date(order.createdAt).toLocaleString('vi-VN')}</p>
+            <p className="text-slate-500 font-medium mt-1">Ngày đặt: {new Date(order.orderDate).toLocaleString('vi-VN')}</p>
           </div>
           <div className={`px-4 py-2 rounded-xl text-sm font-bold border ${getStatusColor(order.status)}`}>
             {getStatusText(order.status)}
@@ -108,6 +134,23 @@ const OrderDetailPage = () => {
                     {order.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
                   </span>
                 </p>
+                {order.paymentMethod === 'VNPAY' && order.paymentStatus !== 'PAID' && (
+                  <button
+                    onClick={handleVNPayPayment}
+                    disabled={paying}
+                    className="mt-4 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-600/10 transition-all flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                  >
+                    {paying ? (
+                      <>
+                        <i className="fa-solid fa-spinner animate-spin mr-1"></i> Đang kết nối...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-credit-card mr-1"></i> Thanh toán ngay
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>

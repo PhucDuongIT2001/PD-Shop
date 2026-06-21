@@ -6,6 +6,63 @@ import {
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
+const ModelPreview = ({ form }) => {
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    let objectUrl = null;
+    if (form.glbFile) {
+      objectUrl = URL.createObjectURL(form.glbFile);
+      setPreviewUrl(objectUrl);
+    } else if (form.modelGlbUrl && form.modelGlbUrl.trim()) {
+      const url = form.modelGlbUrl.trim();
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) {
+        setPreviewUrl(url);
+      } else {
+        setPreviewUrl(`/uploads/${url}`);
+      }
+    } else {
+      setPreviewUrl(null);
+    }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [form.glbFile, form.modelGlbUrl]);
+
+  if (!previewUrl) {
+    return (
+      <div className="bg-slate-900 rounded-2xl p-4 flex flex-col items-center justify-center border border-slate-800 h-[260px] text-center">
+        <Package className="w-10 h-10 text-slate-700 mb-2 animate-pulse" />
+        <p className="text-xs text-slate-500 font-bold">Chưa tải lên tệp tin GLB hoặc nhập URL để hiển thị xem trước 3D</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-slate-950 rounded-2xl p-4 flex flex-col border border-slate-800 relative h-[260px] justify-center overflow-hidden">
+      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest absolute top-3 left-3 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 z-10">
+        Xem trước 3D
+      </span>
+      <model-viewer
+        src={previewUrl}
+        ar
+        camera-controls
+        touch-action="pan-y"
+        alt="Xem trước mô hình 3D"
+        style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }}
+      ></model-viewer>
+      {form.glbFile && (
+        <span className="text-[9px] font-bold text-amber-500 absolute bottom-3 right-3 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+          Tệp máy tính
+        </span>
+      )}
+    </div>
+  );
+};
+
 const AdminArAssets = () => {
   const [allAssets, setAllAssets] = useState([]);
   const [products, setProducts] = useState([]);
@@ -29,8 +86,14 @@ const AdminArAssets = () => {
         api.get('/products'),
       ]);
 
-      const assetsList = assetsRes.data || [];
-      const productsList = (productsRes.data?.content || productsRes.data || []);
+      const assetsList = Array.isArray(assetsRes.data) ? assetsRes.data : [];
+      let productsList = [];
+      const prodData = productsRes.data;
+      if (prodData && Array.isArray(prodData.content)) {
+        productsList = prodData.content;
+      } else if (Array.isArray(prodData)) {
+        productsList = prodData;
+      }
 
       setAllAssets(assetsList);
       setProducts(productsList);
@@ -45,6 +108,7 @@ const AdminArAssets = () => {
           usdzFile: null,
           arType: asset.arType || 'auto',
           scaleFactor: asset.scaleFactor || 1.0,
+          availableColors: asset.availableColors || '',
         };
       });
       setForms(initialForms);
@@ -57,7 +121,7 @@ const AdminArAssets = () => {
   };
 
   const getFormForProduct = (productId) => {
-    return forms[productId] || { modelGlbUrl: '', modelUsdzUrl: '', glbFile: null, usdzFile: null, arType: 'auto', scaleFactor: 1.0 };
+    return forms[productId] || { modelGlbUrl: '', modelUsdzUrl: '', glbFile: null, usdzFile: null, arType: 'auto', scaleFactor: 1.0, availableColors: '' };
   };
 
   const updateForm = (productId, field, value) => {
@@ -84,6 +148,9 @@ const AdminArAssets = () => {
       if (form.modelUsdzUrl.trim()) formData.append('modelUsdzUrl', form.modelUsdzUrl.trim());
       formData.append('arType', form.arType || 'auto');
       formData.append('scaleFactor', parseFloat(form.scaleFactor) || 1.0);
+      if (form.availableColors && form.availableColors.trim()) {
+        formData.append('availableColors', form.availableColors.trim());
+      }
       
       if (form.glbFile) formData.append('glbFile', form.glbFile);
       if (form.usdzFile) formData.append('usdzFile', form.usdzFile);
@@ -224,84 +291,103 @@ const AdminArAssets = () => {
                   {/* Expanded Edit Form */}
                   {isExpanded && (
                     <div className="p-4 border-t border-green-100 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            File hoặc URL Model GLB (Android / Web)
-                          </label>
-                          <div className="space-y-2">
-                            <input
-                              type="file"
-                              accept=".glb"
-                              onChange={e => updateForm(product.id, 'glbFile', e.target.files[0])}
-                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            />
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-400">hoặc URL:</span>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Form Fields */}
+                        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              File hoặc URL Model GLB (Android / Web)
+                            </label>
+                            <div className="space-y-2">
                               <input
-                                type="url"
-                                placeholder="https://s3.amazonaws.com/bucket/model.glb"
-                                value={form.modelGlbUrl}
-                                onChange={e => updateForm(product.id, 'modelGlbUrl', e.target.value)}
-                                className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono"
+                                type="file"
+                                accept=".glb"
+                                onChange={e => updateForm(product.id, 'glbFile', e.target.files[0])}
+                                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                               />
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400">hoặc URL:</span>
+                                <input
+                                  type="url"
+                                  placeholder="https://s3.amazonaws.com/bucket/model.glb"
+                                  value={form.modelGlbUrl}
+                                  onChange={e => updateForm(product.id, 'modelGlbUrl', e.target.value)}
+                                  className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono"
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            File hoặc URL Model USDZ (iOS)
-                          </label>
-                          <div className="space-y-2">
-                            <input
-                              type="file"
-                              accept=".usdz"
-                              onChange={e => updateForm(product.id, 'usdzFile', e.target.files[0])}
-                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            />
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-400">hoặc URL:</span>
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              File hoặc URL Model USDZ (iOS)
+                            </label>
+                            <div className="space-y-2">
                               <input
-                                type="url"
-                                placeholder="https://s3.amazonaws.com/bucket/model.usdz"
-                                value={form.modelUsdzUrl}
-                                onChange={e => updateForm(product.id, 'modelUsdzUrl', e.target.value)}
-                                className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono"
+                                type="file"
+                                accept=".usdz"
+                                onChange={e => updateForm(product.id, 'usdzFile', e.target.files[0])}
+                                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                               />
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400">hoặc URL:</span>
+                                <input
+                                  type="url"
+                                  placeholder="https://s3.amazonaws.com/bucket/model.usdz"
+                                  value={form.modelUsdzUrl}
+                                  onChange={e => updateForm(product.id, 'modelUsdzUrl', e.target.value)}
+                                  className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono"
+                                />
+                              </div>
                             </div>
                           </div>
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              Loại AR
+                            </label>
+                            <select
+                              value={form.arType}
+                              onChange={e => updateForm(product.id, 'arType', e.target.value)}
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                            >
+                              <option value="auto">Auto (Tự động)</option>
+                              <option value="scene-viewer">Scene Viewer (Android)</option>
+                              <option value="quick-look">Quick Look (iOS)</option>
+                              <option value="webxr">WebXR</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              Tỷ lệ (Scale Factor)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0.1"
+                              max="5.0"
+                              value={form.scaleFactor}
+                              onChange={e => updateForm(product.id, 'scaleFactor', e.target.value)}
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              Màu sắc 3D khả dụng (Danh sách mã Hex, phân cách bằng dấu phẩy)
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Ví dụ: #ef4444,#10b981,#3b82f6"
+                              value={form.availableColors || ''}
+                              onChange={e => updateForm(product.id, 'availableColors', e.target.value)}
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            Loại AR
-                          </label>
-                          <select
-                            value={form.arType}
-                            onChange={e => updateForm(product.id, 'arType', e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                          >
-                            <option value="auto">Auto (Tự động)</option>
-                            <option value="scene-viewer">Scene Viewer (Android)</option>
-                            <option value="quick-look">Quick Look (iOS)</option>
-                            <option value="webxr">WebXR</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            Tỷ lệ (Scale Factor)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="0.1"
-                            max="5.0"
-                            value={form.scaleFactor}
-                            onChange={e => updateForm(product.id, 'scaleFactor', e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                          />
+                        {/* 3D Preview */}
+                        <div className="lg:col-span-1">
+                          <ModelPreview form={form} />
                         </div>
                       </div>
-                      <div className="flex justify-end">
+                      <div className="flex justify-end border-t border-slate-100 pt-3">
                         <button
                           onClick={() => saveAsset(product.id)}
                           disabled={isSavingThis}
@@ -360,84 +446,103 @@ const AdminArAssets = () => {
                   {/* Add Form */}
                   {isExpanded && (
                     <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            File hoặc URL Model GLB (Android / Web) *
-                          </label>
-                          <div className="space-y-2">
-                            <input
-                              type="file"
-                              accept=".glb"
-                              onChange={e => updateForm(product.id, 'glbFile', e.target.files[0])}
-                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            />
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-400">hoặc URL:</span>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Form Fields */}
+                        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              File hoặc URL Model GLB (Android / Web) *
+                            </label>
+                            <div className="space-y-2">
                               <input
-                                type="url"
-                                placeholder="https://s3.amazonaws.com/models/product.glb"
-                                value={form.modelGlbUrl}
-                                onChange={e => updateForm(product.id, 'modelGlbUrl', e.target.value)}
-                                className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono bg-white"
+                                type="file"
+                                accept=".glb"
+                                onChange={e => updateForm(product.id, 'glbFile', e.target.files[0])}
+                                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                               />
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400">hoặc URL:</span>
+                                <input
+                                  type="url"
+                                  placeholder="https://s3.amazonaws.com/models/product.glb"
+                                  value={form.modelGlbUrl}
+                                  onChange={e => updateForm(product.id, 'modelGlbUrl', e.target.value)}
+                                  className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono bg-white"
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            File hoặc URL Model USDZ (iOS) — Tùy chọn
-                          </label>
-                          <div className="space-y-2">
-                            <input
-                              type="file"
-                              accept=".usdz"
-                              onChange={e => updateForm(product.id, 'usdzFile', e.target.files[0])}
-                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            />
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-400">hoặc URL:</span>
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              File hoặc URL Model USDZ (iOS) — Tùy chọn
+                            </label>
+                            <div className="space-y-2">
                               <input
-                                type="url"
-                                placeholder="https://s3.amazonaws.com/models/product.usdz"
-                                value={form.modelUsdzUrl}
-                                onChange={e => updateForm(product.id, 'modelUsdzUrl', e.target.value)}
-                                className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono bg-white"
+                                type="file"
+                                accept=".usdz"
+                                onChange={e => updateForm(product.id, 'usdzFile', e.target.files[0])}
+                                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                               />
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400">hoặc URL:</span>
+                                <input
+                                  type="url"
+                                  placeholder="https://s3.amazonaws.com/models/product.usdz"
+                                  value={form.modelUsdzUrl}
+                                  onChange={e => updateForm(product.id, 'modelUsdzUrl', e.target.value)}
+                                  className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono bg-white"
+                                />
+                              </div>
                             </div>
                           </div>
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              Loại AR
+                            </label>
+                            <select
+                              value={form.arType}
+                              onChange={e => updateForm(product.id, 'arType', e.target.value)}
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
+                            >
+                              <option value="auto">Auto (Tự động)</option>
+                              <option value="scene-viewer">Scene Viewer (Android)</option>
+                              <option value="quick-look">Quick Look (iOS)</option>
+                              <option value="webxr">WebXR</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              Tỷ lệ (Scale Factor)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0.1"
+                              max="5.0"
+                              value={form.scaleFactor}
+                              onChange={e => updateForm(product.id, 'scaleFactor', e.target.value)}
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
+                              Màu sắc 3D khả dụng (Danh sách mã Hex, phân cách bằng dấu phẩy)
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Ví dụ: #ef4444,#10b981,#3b82f6"
+                              value={form.availableColors || ''}
+                              onChange={e => updateForm(product.id, 'availableColors', e.target.value)}
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none font-mono bg-white"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            Loại AR
-                          </label>
-                          <select
-                            value={form.arType}
-                            onChange={e => updateForm(product.id, 'arType', e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
-                          >
-                            <option value="auto">Auto (Tự động)</option>
-                            <option value="scene-viewer">Scene Viewer (Android)</option>
-                            <option value="quick-look">Quick Look (iOS)</option>
-                            <option value="webxr">WebXR</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-600 block mb-1.5 uppercase tracking-wider">
-                            Tỷ lệ (Scale Factor)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="0.1"
-                            max="5.0"
-                            value={form.scaleFactor}
-                            onChange={e => updateForm(product.id, 'scaleFactor', e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
-                          />
+                        {/* 3D Preview */}
+                        <div className="lg:col-span-1">
+                          <ModelPreview form={form} />
                         </div>
                       </div>
-                      <div className="flex justify-end">
+                      <div className="flex justify-end border-t border-slate-200 pt-3">
                         <button
                           onClick={() => saveAsset(product.id)}
                           disabled={isSavingThis}

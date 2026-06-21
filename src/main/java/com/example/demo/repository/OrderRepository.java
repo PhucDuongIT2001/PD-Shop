@@ -39,10 +39,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findTop5ByUserIdOrderByOrderDateDesc(Long userId);
 
     @Query("SELECT o FROM Order o " +
+           "LEFT JOIN FETCH o.user u " +
            "LEFT JOIN FETCH o.orderDetails od " +
            "LEFT JOIN FETCH od.product " +
            "WHERE o.id = :id")
     Optional<Order> findByIdWithDetails(@Param("id") Long id);
+
+    @Query("SELECT o FROM Order o " +
+           "LEFT JOIN FETCH o.user u " +
+           "LEFT JOIN FETCH o.orderDetails od " +
+           "LEFT JOIN FETCH od.product " +
+           "WHERE o.id = :id")
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    Optional<Order> findByIdWithDetailsForUpdate(@Param("id") Long id);
 
     Optional<Order> findByConfirmationToken(String confirmationToken);
 

@@ -25,22 +25,30 @@ const MyOrdersPage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'UNCONFIRMED': return 'bg-orange-100 text-orange-850';
       case 'PENDING': return 'bg-yellow-100 text-yellow-800';
       case 'PROCESSING': return 'bg-blue-100 text-blue-800';
-      case 'SHIPPED': return 'bg-indigo-100 text-indigo-800';
+      case 'SHIPPED':
+      case 'SHIPPING': return 'bg-purple-100 text-purple-800';
       case 'DELIVERED': return 'bg-green-100 text-green-800';
       case 'CANCELLED': return 'bg-red-100 text-red-800';
+      case 'PAID': return 'bg-emerald-100 text-emerald-800';
+      case 'FAILED': return 'bg-rose-100 text-rose-800';
       default: return 'bg-slate-100 text-slate-800';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
+      case 'UNCONFIRMED': return 'Chờ xác nhận Email';
       case 'PENDING': return 'Chờ xử lý';
       case 'PROCESSING': return 'Đang chuẩn bị';
-      case 'SHIPPED': return 'Đang giao hàng';
-      case 'DELIVERED': return 'Đã giao';
+      case 'SHIPPED':
+      case 'SHIPPING': return 'Đang giao hàng';
+      case 'DELIVERED': return 'Đã giao thành công';
       case 'CANCELLED': return 'Đã huỷ';
+      case 'PAID': return 'Đã thanh toán';
+      case 'FAILED': return 'Thanh toán thất bại';
       default: return status;
     }
   };
@@ -74,7 +82,7 @@ const MyOrdersPage = () => {
                 </div>
                 <div>
                   <p className="text-sm text-slate-500 font-semibold mb-1">Ngày đặt</p>
-                  <p className="font-medium text-slate-700">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</p>
+                  <p className="font-medium text-slate-700">{new Date(order.orderDate).toLocaleDateString('vi-VN')}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-500 font-semibold mb-1">Tổng tiền</p>

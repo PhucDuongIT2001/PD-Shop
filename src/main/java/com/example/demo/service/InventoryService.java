@@ -84,7 +84,7 @@ public class InventoryService {
     }
 
     private Product findProductById(Long productId) {
-        return productRepository.findById(productId)
+        return productRepository.findByIdForUpdate(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
     }
 

@@ -41,8 +41,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 11MB
+      max-file-size: 100MB
+      max-request-size: 110MB
 
   # Mail Configuration
   mail:

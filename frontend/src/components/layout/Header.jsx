@@ -267,9 +267,11 @@ const Header = () => {
                         <LayoutDashboard className="w-4 h-4" /> Admin Panel
                       </Link>
                     )}
-                    
                     <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-bold">
                       <User className="w-4 h-4" /> Thông tin cá nhân
+                    </Link>
+                    <Link to="/orders" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-bold">
+                      <ShoppingBag className="w-4 h-4" /> Đơn hàng của tôi
                     </Link>
                     <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-bold">
                       <Settings className="w-4 h-4" /> Cài đặt

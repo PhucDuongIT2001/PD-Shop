@@ -13,6 +13,9 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import com.example.demo.entity.VerificationToken;
+import com.example.demo.repository.VerificationTokenRepository;
+import java.time.LocalDateTime;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -31,6 +34,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Autowired
     @Lazy
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private VerificationTokenRepository verificationTokenRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -62,6 +71,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 user.setProviderId(oAuth2User.getAttribute("sub"));
                 userRepository.save(user);
             }
+            if (!user.isEnabled()) {
+                generateAndSendOtp(user);
+            }
         } else {
             user = registerNewOAuth2User(userRequest, oAuth2User);
         }
@@ -90,6 +102,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         
         // Generate random password for OAuth2 users since they don't use it to login
         user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+        user.setEnabled(false); // New Google login users must verify email with OTP
 
         Role userRole = roleRepository.findByName("CUSTOMER")
                 .orElseGet(() -> {
@@ -111,6 +124,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         profile.setUser(user);
         user.setProfile(profile);
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        generateAndSendOtp(savedUser);
+        return savedUser;
+    }
+
+    private void generateAndSendOtp(User user) {
+        verificationTokenRepository.deleteByUser(user);
+        verificationTokenRepository.flush();
+
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        VerificationToken verificationToken = new VerificationToken(otp, user, LocalDateTime.now().plusMinutes(15));
+        verificationTokenRepository.save(verificationToken);
+
+        emailService.sendOtpVerificationEmail(user.getEmail(), otp);
     }
 }

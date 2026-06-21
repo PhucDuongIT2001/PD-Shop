@@ -24,15 +24,24 @@
             <h1>Cảm ơn bạn đã mua hàng tại PD Shop!</h1>
         </div>
         
-        <p>Xin chào <strong th:text="${order.user.fullName != null ? order.user.fullName : order.user.username}">Khách hàng</strong>,</p>
+        <p>Xin chào <strong th:text="${order.user.profile != null and order.user.profile.fullName != null ? order.user.profile.fullName : order.user.username}">Khách hàng</strong>,</p>
         <p>Đơn hàng của bạn đã được ghi nhận. Để hoàn tất quá trình đặt hàng và nhận mã QR thanh toán, vui lòng xác nhận đơn hàng của bạn bằng cách bấm vào nút bên dưới:</p>
         
         <div style="text-align: center; margin: 30px 0;">
             <!-- Link trỏ về Frontend React để xử lý API xác nhận -->
-            <a th:href="@{'http://localhost:5173/confirm-order?token=' + ${order.confirmationToken}}" 
-               style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+            <a th:href="${confirmationLink}" 
+               style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block; margin-bottom: 10px;">
                 XÁC NHẬN ĐƠN HÀNG
             </a>
+            
+            <p style="font-size: 12px; color: #6b7280; margin: 10px 0 5px 0;">Hoặc quét mã QR bên dưới bằng điện thoại để xác nhận & thanh toán:</p>
+            <div style="display: inline-block; padding: 10px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + ${confirmationLink}" 
+                     alt="Mã QR Xác nhận Đơn hàng" 
+                     width="150" 
+                     height="150" 
+                     style="display: block;" />
+            </div>
         </div>
         
         <p>Dưới đây là thông tin chi tiết về đơn hàng của bạn:</p>

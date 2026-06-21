@@ -181,10 +181,14 @@ public class AdminProductService {
 
     private String generateUniqueSlug(String name, Long currentId) {
         String baseSlug = generateSlug(name);
+        // Fallback khi tên tiếng Việt bị rỗng sau normalize
+        if (baseSlug == null || baseSlug.isBlank()) {
+            baseSlug = "product-" + System.currentTimeMillis();
+        }
         String finalSlug = baseSlug;
         int counter = 1;
         while (productRepository.findBySlug(finalSlug)
-                .filter(p -> !p.getId().equals(currentId)).isPresent()) {
+                .filter(p -> currentId == null || !p.getId().equals(currentId)).isPresent()) {
             finalSlug = baseSlug + "-" + counter;
             counter++;
         }
@@ -193,9 +197,16 @@ public class AdminProductService {
 
     private String generateSlug(String input) {
         if (input == null) return "";
+        // Bước 1: thay khoảng trắng bằng gạch ngang
         String nowhitespace = WHITESPACE.matcher(input.trim()).replaceAll("-");
-        String normalized   = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
-        String slug         = NONLATIN.matcher(normalized).replaceAll("");
-        return slug.toLowerCase(Locale.ENGLISH);
+        // Bước 2: NFD normalize để tách dấu khỏi ký tự
+        String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
+        // Bước 3: xóa combining diacritical marks (giữ lại chữ cái sau khi tách dấu)
+        String withoutDiacritics = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        // Bước 4: xóa ký tự không phải chữ/số/gạch ngang
+        String slug = withoutDiacritics.replaceAll("[^a-zA-Z0-9-]", "").toLowerCase(Locale.ENGLISH);
+        // Bước 5: xóa gạch ngang đầu/cuối thừa
+        slug = slug.replaceAll("-{2,}", "-").replaceAll("^-|-$", "");
+        return slug;
     }
 }

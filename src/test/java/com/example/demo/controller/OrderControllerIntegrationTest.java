@@ -103,12 +103,12 @@ public class OrderControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(checkoutRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.status").value("UNCONFIRMED"))
                 .andExpect(jsonPath("$.totalAmount").value(200.0));
 
-        // Verify stock was deducted
+        // Verify stock was NOT deducted yet (still 5) since it is UNCONFIRMED
         Product productAfter = productRepository.findById(testProduct.getId()).get();
-        assertThat(productAfter.getQuantity()).isEqualTo(3);
+        assertThat(productAfter.getQuantity()).isEqualTo(5);
     }
 
     /**

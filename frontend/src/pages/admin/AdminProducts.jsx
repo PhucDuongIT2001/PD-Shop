@@ -23,9 +23,17 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     try {
       const res = await api.get('/admin/products');
-      setProductList(res.data.content || res.data || []);
+      const data = res.data;
+      if (data && Array.isArray(data.content)) {
+        setProductList(data.content);
+      } else if (Array.isArray(data)) {
+        setProductList(data);
+      } else {
+        setProductList([]);
+      }
     } catch (err) {
       toast.error('Lỗi khi tải danh sách sản phẩm');
+      setProductList([]);
     }
   };
 
@@ -35,10 +43,12 @@ const AdminProducts = () => {
         api.get('/categories'),
         api.get('/brands')
       ]);
-      setCategories(catRes.data || []);
-      setBrands(brandRes.data || []);
+      setCategories(Array.isArray(catRes.data) ? catRes.data : []);
+      setBrands(Array.isArray(brandRes.data) ? brandRes.data : []);
     } catch (err) {
       console.error('Error fetching categories or brands', err);
+      setCategories([]);
+      setBrands([]);
     }
   };
   
@@ -58,6 +68,7 @@ const AdminProducts = () => {
     status: 'ACTIVE',
     image: 'https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?auto=format&fit=crop&q=80&w=400',
     arModelUrl: '',
+    glbFile: null,
     description: ''
   });
 
@@ -91,14 +102,25 @@ const AdminProducts = () => {
         formData.append('modelGlbUrl', newProduct.arModelUrl);
       }
 
-      await api.post('/admin/products', formData, {
+      const res = await api.post('/admin/products', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      
+      // Nếu có chọn tệp tin GLB từ máy, thực hiện upload qua endpoint AR Asset
+      if (newProduct.glbFile && res.data?.id) {
+        const arFormData = new FormData();
+        arFormData.append('glbFile', newProduct.glbFile);
+        arFormData.append('arType', 'auto');
+        arFormData.append('scaleFactor', 1.0);
+        await api.post(`/admin/products/${res.data.id}/ar-asset`, arFormData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
       
       toast.success('Thêm sản phẩm thành công!');
       setIsAddModalOpen(false);
       setNewProduct({
-        name: '', categoryId: '', brandId: '', price: '', oldPrice: '', stock: '', sku: '', status: 'ACTIVE', image: '', thumbnailFile: null, imagePreview: null, arModelUrl: '', description: ''
+        name: '', categoryId: '', brandId: '', price: '', oldPrice: '', stock: '', sku: '', status: 'ACTIVE', image: '', thumbnailFile: null, imagePreview: null, arModelUrl: '', glbFile: null, description: ''
       });
       fetchProducts();
     } catch (err) {
@@ -108,12 +130,15 @@ const AdminProducts = () => {
   };
 
   const openEditModal = (product) => {
+    const existingArAsset = product.arAssets && product.arAssets.length > 0 ? product.arAssets[0] : null;
     setEditingProduct({
       ...product,
       categoryId: product.categoryId || product.category?.id || '',
       brandId: product.brandId || product.brand?.id || '',
       stock: product.quantity || product.stock || 0,
-      sku: product.sku || ''
+      sku: product.sku || '',
+      arModelUrl: existingArAsset ? (existingArAsset.modelGlbUrl || '') : '',
+      glbFile: null
     });
     setIsEditModalOpen(true);
   };
@@ -151,6 +176,17 @@ const AdminProducts = () => {
       await api.put(`/admin/products/${editingProduct.id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
+      // Nếu có chọn tệp tin GLB từ máy, thực hiện upload qua endpoint AR Asset
+      if (editingProduct.glbFile) {
+        const arFormData = new FormData();
+        arFormData.append('glbFile', editingProduct.glbFile);
+        arFormData.append('arType', 'auto');
+        arFormData.append('scaleFactor', 1.0);
+        await api.post(`/admin/products/${editingProduct.id}/ar-asset`, arFormData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
       
       toast.success('Cập nhật sản phẩm thành công!');
       setIsEditModalOpen(false);
@@ -492,8 +528,12 @@ const AdminProducts = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Link AR Model (GLB URL)</label>
-                  <input type="text" value={newProduct.arModelUrl || ''} onChange={e => setNewProduct({...newProduct, arModelUrl: e.target.value})} className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500/20 outline-none font-medium" placeholder="https://.../model.glb"/>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Tải lên file AR Model (.glb)</label>
+                  <input type="file" accept=".glb" onChange={e => setNewProduct({...newProduct, glbFile: e.target.files[0]})} className="w-full bg-slate-50 border-none rounded-xl py-2 px-4 focus:ring-2 focus:ring-blue-500/20 outline-none font-medium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-400">Hoặc dán Link URL:</span>
+                    <input type="text" value={newProduct.arModelUrl || ''} onChange={e => setNewProduct({...newProduct, arModelUrl: e.target.value})} className="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500/20 outline-none text-xs font-medium" placeholder="https://.../model.glb"/>
+                  </div>
                 </div>
               </div>
 
@@ -590,8 +630,12 @@ const AdminProducts = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Link AR Model (GLB URL)</label>
-                  <input type="text" value={editingProduct.arModelUrl || ''} onChange={e => setEditingProduct({...editingProduct, arModelUrl: e.target.value})} className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500/20 outline-none font-medium" placeholder="https://.../model.glb"/>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Tải lên file AR Model (.glb)</label>
+                  <input type="file" accept=".glb" onChange={e => setEditingProduct({...editingProduct, glbFile: e.target.files[0]})} className="w-full bg-slate-50 border-none rounded-xl py-2 px-4 focus:ring-2 focus:ring-blue-500/20 outline-none font-medium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-400">Hoặc dán Link URL:</span>
+                    <input type="text" value={editingProduct.arModelUrl || ''} onChange={e => setEditingProduct({...editingProduct, arModelUrl: e.target.value})} className="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500/20 outline-none text-xs font-medium" placeholder="https://.../model.glb"/>
+                  </div>
                 </div>
               </div>
 

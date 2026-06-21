@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, ShoppingBag, User, Phone, MapPin,
-  FileText, CheckCircle2, Loader2, Package
+  FileText, CheckCircle2, Loader2, Package, Calendar
 } from 'lucide-react';
 import api from '../api/axios';
 import { useCart } from '../context/CartContext';
@@ -11,6 +11,10 @@ import { getProductImageUrl } from '../utils/imageUtils';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const couponApplied = location.state?.couponApplied || '';
+  const discount = location.state?.discount || 0;
+
   const { cart, fetchCart } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
@@ -63,22 +67,8 @@ const CheckoutPage = () => {
 
       await fetchCart(); // refresh cart (should be empty now)
 
-      if (form.paymentMethod === 'VNPAY') {
-        const paymentUrl = res.data.paymentUrl;
-        if (paymentUrl) {
-          toast.success('Đang chuyển đến cổng thanh toán VNPay...');
-          setTimeout(() => {
-            window.location.href = paymentUrl;
-          }, 1000);
-        } else {
-          toast.error('Không tạo được link thanh toán VNPay. Vui lòng thử lại.');
-        }
-        return;
-      }
-
-      // COD
       setOrderSuccess(res.data);
-      toast.success('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.');
+      toast.success('Đặt đơn hàng thành công! Vui lòng xác thực qua Email.');
     } catch (err) {
       const msg = err.response?.data?.message || 'Đặt hàng thất bại. Vui lòng thử lại.';
       toast.error(msg);
@@ -126,6 +116,12 @@ const CheckoutPage = () => {
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span className="text-slate-700 font-bold">{orderSuccess.shippingAddress}</span>
               </div>
+              <div className="flex gap-3 text-sm">
+                <Calendar className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                <span className="text-slate-700 font-bold">
+                  Ngày đặt: {orderSuccess.orderDate ? new Date(orderSuccess.orderDate).toLocaleString('vi-VN') : 'Đang cập nhật'}
+                </span>
+              </div>
               <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
                 <span className="text-slate-500 font-bold text-sm">Tổng tiền</span>
                 <span className="text-xl font-black text-blue-600">
@@ -142,7 +138,7 @@ const CheckoutPage = () => {
                 Tiếp tục mua sắm
               </Link>
               <Link
-                to="/profile"
+                to="/orders"
                 className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 text-center italic"
               >
                 Xem đơn hàng
@@ -153,6 +149,7 @@ const CheckoutPage = () => {
       </div>
     );
   }
+
 
   // ── Empty Cart Guard ──────────────────────────────────────────────────────
   if (activeItems.length === 0) {
@@ -382,10 +379,16 @@ const CheckoutPage = () => {
                   <span>Phí vận chuyển</span>
                   <span className="text-emerald-500">Miễn phí</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-slate-500 font-bold text-sm">
+                    <span>Mã giảm giá ({couponApplied})</span>
+                    <span className="text-emerald-500">-{discount.toLocaleString()}₫</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-end pt-3 border-t border-slate-100">
                   <span className="font-black text-slate-900 uppercase italic">Tổng tiền</span>
                   <span className="text-2xl font-black text-blue-600 tracking-tighter">
-                    {cart.total?.toLocaleString()}₫
+                    {Math.max(0, (cart.total || 0) - discount).toLocaleString()}₫
                   </span>
                 </div>
               </div>

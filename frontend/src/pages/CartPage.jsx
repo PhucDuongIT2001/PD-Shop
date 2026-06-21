@@ -1,16 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowLeft, Heart, Info } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProductImageUrl } from '../utils/imageUtils';
+import toast from 'react-hot-toast';
 
 const CartPage = () => {
   const navigate = useNavigate();
   const { cart, updateQuantity, removeItem, toggleSaveForLater, loading } = useCart();
 
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [couponApplied, setCouponApplied] = useState('');
+
   const activeItems = cart.items ? cart.items.filter(item => !item.saveForLater) : [];
   const savedItems = cart.items ? cart.items.filter(item => item.saveForLater) : [];
+
+  const handleApplyCoupon = () => {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      toast.error('Vui lòng nhập mã giảm giá');
+      return;
+    }
+
+    if (code === 'PDSHOP10' || code === 'MGG10') {
+      const discountVal = Math.round((cart.subtotal || 0) * 0.1);
+      setDiscount(discountVal);
+      setCouponApplied(code);
+      toast.success('Áp dụng mã giảm giá 10% thành công!');
+    } else if (code === 'PDSHOP20') {
+      const discountVal = Math.round((cart.subtotal || 0) * 0.2);
+      setDiscount(discountVal);
+      setCouponApplied(code);
+      toast.success('Áp dụng mã giảm giá 20% thành công!');
+    } else {
+      toast.error('Mã giảm giá không hợp lệ hoặc đã hết hạn!');
+    }
+  };
+
+  const handleCheckout = () => {
+    navigate('/checkout', { state: { couponApplied, discount } });
+  };
 
   if (loading && (!cart.items || cart.items.length === 0)) {
     return (
@@ -19,6 +50,8 @@ const CartPage = () => {
       </div>
     );
   }
+
+  const finalTotal = Math.max(0, (cart.total || 0) - discount);
 
   return (
     <div className="flex-grow bg-slate-50 py-8 md:py-12">
@@ -50,12 +83,12 @@ const CartPage = () => {
               <AnimatePresence>
                 {activeItems.map((item) => (
                   <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-slate-100 group hover:border-blue-200 transition-all"
+                     key={item.id}
+                     layout
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     exit={{ opacity: 0, scale: 0.95 }}
+                     className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-slate-100 group hover:border-blue-200 transition-all"
                   >
                     <div className="flex gap-4 md:gap-6">
                       <div className="w-24 h-24 md:w-32 md:h-32 bg-slate-50 rounded-2xl overflow-hidden shrink-0">
@@ -166,13 +199,13 @@ const CartPage = () => {
                     <span className="text-emerald-500">Miễn phí</span>
                   </div>
                   <div className="flex justify-between text-slate-500 font-bold">
-                    <span>Mã giảm giá</span>
-                    <span>-0₫</span>
+                    <span>Mã giảm giá {couponApplied && `(${couponApplied})`}</span>
+                    <span className={discount > 0 ? "text-emerald-500" : ""}>-{discount.toLocaleString()}₫</span>
                   </div>
                   <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
                     <span className="text-slate-900 font-black text-xl uppercase italic">Tổng tiền</span>
                     <div className="text-right">
-                      <p className="text-3xl font-black text-blue-600 tracking-tighter">{cart.total?.toLocaleString()}₫</p>
+                      <p className="text-3xl font-black text-blue-600 tracking-tighter">{finalTotal.toLocaleString()}₫</p>
                       <p className="text-[10px] text-slate-400 font-bold italic">(Đã bao gồm VAT)</p>
                     </div>
                   </div>
@@ -183,15 +216,42 @@ const CartPage = () => {
                     <input
                       type="text"
                       placeholder="Nhập mã giảm giá (MGG10...)"
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 focus:outline-none focus:border-blue-500 transition-all font-bold"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      disabled={!!couponApplied}
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 focus:outline-none focus:border-blue-500 transition-all font-bold disabled:bg-slate-100 disabled:cursor-not-allowed"
                     />
-                    <button className="absolute right-2 top-2 bottom-2 px-6 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all">
-                      Áp dụng
-                    </button>
+                    {couponApplied ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCouponApplied('');
+                          setDiscount(0);
+                          setCouponCode('');
+                          toast.success('Đã hủy áp dụng mã giảm giá');
+                        }}
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-600 transition-all"
+                      >
+                        Hủy
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all"
+                      >
+                        Áp dụng
+                      </button>
+                    )}
                   </div>
+                  {couponApplied && (
+                    <p className="text-xs text-emerald-600 font-bold pl-2">
+                      ✓ Đã áp dụng mã <span className="font-black">{couponApplied}</span> (Giảm {couponApplied === 'PDSHOP20' ? '20%' : '10%'})
+                    </p>
+                  )}
 
                   <button
-                    onClick={() => navigate('/checkout')}
+                    onClick={handleCheckout}
                     className="w-full py-5 bg-blue-600 text-white rounded-3xl font-black text-lg italic uppercase tracking-wider hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/30 active:scale-[0.98]"
                   >
                     Tiến hành thanh toán

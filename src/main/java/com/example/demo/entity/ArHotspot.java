@@ -1,9 +1,12 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "ar_hotspots")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ArHotspot {
 
     @Id
@@ -12,6 +15,7 @@ public class ArHotspot {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ar_asset_id", nullable = false)
+    @JsonIgnore
     private ProductArAsset arAsset;
 
     private String name; // ví dụ: "camera", "screen"

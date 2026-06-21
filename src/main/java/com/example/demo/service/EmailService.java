@@ -26,6 +26,9 @@ public class EmailService {
     @Value("${spring.mail.username:noreply@pdshop.com}")
     private String fromEmail;
 
+    @Value("${pdshop.app.frontendUrl:http://localhost:5173}")
+    private String frontendUrl;
+
     public EmailService(JavaMailSender javaMailSender, TemplateEngine templateEngine) {
         this.javaMailSender = javaMailSender;
         this.templateEngine = templateEngine;
@@ -36,6 +39,13 @@ public class EmailService {
         try {
             logger.info("Bắt đầu gửi email xác nhận cho đơn hàng #{}", order.getId());
 
+            // In link xác nhận ra console để lập trình viên test trong chế độ development
+            String confirmationLink = frontendUrl + "/confirm-order?token=" + order.getConfirmationToken();
+            logger.warn("\n==========================================================================" +
+                        "\n[DEVELOPMENT ONLY] ĐƯỜNG LINK XÁC NHẬN ĐƠN HÀNG #" + order.getId() + ":" +
+                        "\n" + confirmationLink +
+                        "\n==========================================================================");
+
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message,
                     MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
@@ -44,8 +54,9 @@ public class EmailService {
             // Thiết lập Context cho Thymeleaf
             Context context = new Context();
             context.setVariable("order", order);
-            // Có thể thêm biến khác nếu cần, ví dụ base_url
             context.setVariable("baseUrl", "http://localhost:8080");
+            context.setVariable("frontendUrl", frontendUrl);
+            context.setVariable("confirmationLink", confirmationLink);
 
             // Render template thành HTML string
             String html = templateEngine.process("emails/order-confirmation", context);
@@ -67,6 +78,11 @@ public class EmailService {
     public void sendVnpayPaymentEmail(Order order, String paymentUrl) {
         try {
             logger.info("Bắt đầu gửi email link thanh toán VNPAY cho đơn hàng #{}", order.getId());
+
+            logger.warn("\n==========================================================================" +
+                        "\n[DEVELOPMENT ONLY] LINK THANH TOÁN VNPAY CHO ĐƠN HÀNG #" + order.getId() + ":" +
+                        "\n" + paymentUrl +
+                        "\n==========================================================================");
 
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message,
@@ -97,6 +113,11 @@ public class EmailService {
         try {
             logger.info("Bắt đầu gửi email khôi phục mật khẩu cho: {}", toEmail);
 
+            logger.warn("\n==========================================================================" +
+                        "\n[DEVELOPMENT ONLY] LINK KHÔI PHỤC MẬT KHẨU CHO: " + toEmail + ":" +
+                        "\n" + resetUrl +
+                        "\n==========================================================================");
+
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -121,6 +142,11 @@ public class EmailService {
     public void sendOtpVerificationEmail(String toEmail, String otp) {
         try {
             logger.info("Bắt đầu gửi email mã xác nhận OTP cho: {}", toEmail);
+
+            logger.warn("\n==========================================================================" +
+                        "\n[DEVELOPMENT ONLY] MÃ OTP XÁC MINH CHO: " + toEmail + ":" +
+                        "\n" + otp +
+                        "\n==========================================================================");
 
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

@@ -8,7 +8,6 @@ import api from '../api/axios';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import '@google/model-viewer';
 import { getProductImageUrl } from '../utils/imageUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +24,7 @@ const ProductDetailPage = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showAR, setShowAR] = useState(false);
   const modelRef = useRef(null);
+  const arContainerRef = useRef(null);
 
   // Reviews states
   const [reviews, setReviews] = useState([]);
@@ -48,12 +48,53 @@ const ProductDetailPage = () => {
   const handleColorChange = (colorHex) => {
     if (modelRef.current && modelRef.current.model) {
       const [r, g, b] = hexToRgb(colorHex);
-      const material = modelRef.current.model.materials[0];
-      if (material) {
-        material.pbrMetallicRoughness.setBaseColorFactor([r/255, g/255, b/255, 1]);
-      }
+      modelRef.current.model.materials.forEach(material => {
+        if (material && material.pbrMetallicRoughness) {
+          material.pbrMetallicRoughness.setBaseColorFactor([r/255, g/255, b/255, 1]);
+        }
+      });
     }
   };
+
+  // Mount model-viewer via raw DOM API to avoid React property/attribute confusion
+  useEffect(() => {
+    if (!showAR || !arAsset || !arContainerRef.current) return;
+
+    const container = arContainerRef.current;
+    // Remove any existing model-viewer
+    const existing = container.querySelector('model-viewer');
+    if (existing) container.removeChild(existing);
+
+    const mv = document.createElement('model-viewer');
+    const src = arAsset.modelGlbUrl?.startsWith('http') || arAsset.modelGlbUrl?.startsWith('/')
+      ? arAsset.modelGlbUrl
+      : `/uploads/${arAsset.modelGlbUrl}`;
+
+    mv.setAttribute('src', src);
+    mv.setAttribute('camera-controls', '');
+    mv.setAttribute('auto-rotate', '');
+    mv.setAttribute('shadow-intensity', '1');
+    mv.setAttribute('ar', '');
+    mv.setAttribute('ar-modes', 'scene-viewer webxr quick-look');
+    if (arAsset.modelUsdzUrl) {
+      const usdzSrc = arAsset.modelUsdzUrl?.startsWith('http') || arAsset.modelUsdzUrl?.startsWith('/')
+        ? arAsset.modelUsdzUrl : `/uploads/${arAsset.modelUsdzUrl}`;
+      mv.setAttribute('ios-src', usdzSrc);
+    }
+    if (arAsset.environmentMapUrl) {
+      mv.setAttribute('environment-image', arAsset.environmentMapUrl);
+    }
+    mv.style.display = 'block';
+    mv.style.width = '100%';
+    mv.style.height = '100%';
+    modelRef.current = mv;
+
+    container.appendChild(mv);
+
+    return () => {
+      if (container.contains(mv)) container.removeChild(mv);
+    };
+  }, [showAR, arAsset]);
 
   const fetchReviews = async () => {
     try {
@@ -215,7 +256,7 @@ const ProductDetailPage = () => {
         {/* Product Details Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16 mb-16">
           {/* Product Image / AR Viewer */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex items-center justify-center min-h-[400px] relative group overflow-hidden">
+          <div className={`bg-white rounded-3xl shadow-sm border border-slate-100 relative group ${showAR && arAsset ? 'p-0 h-[460px]' : 'p-8 flex items-center justify-center min-h-[400px] overflow-hidden'}`}>
             {product.discount > 0 && (
               <div className="absolute top-4 left-4 z-20 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-lg shadow-lg shadow-red-600/20 italic">
                 -{product.discount}%
@@ -227,7 +268,7 @@ const ProductDetailPage = () => {
             </button>
 
             {arAsset && (
-              <button 
+              <button
                 onClick={() => setShowAR(!showAR)}
                 className="absolute bottom-4 right-4 z-20 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-colors"
               >
@@ -237,39 +278,12 @@ const ProductDetailPage = () => {
             )}
 
             {showAR && arAsset ? (
-              <div className="relative w-full h-[400px]">
-                <model-viewer
-                  ref={modelRef}
-                  src={arAsset.modelGlbUrl?.startsWith('http') || arAsset.modelGlbUrl?.startsWith('/') ? arAsset.modelGlbUrl : `/uploads/${arAsset.modelGlbUrl}`}
-                  ios-src={arAsset.modelUsdzUrl?.startsWith('http') || arAsset.modelUsdzUrl?.startsWith('/') ? arAsset.modelUsdzUrl : `/uploads/${arAsset.modelUsdzUrl}`}
-                  environment-image={arAsset.environmentMapUrl || ''}
-                  alt={product.name}
-                  ar
-                  ar-modes="scene-viewer webxr quick-look"
-                  camera-controls
-                  auto-rotate
-                  style={{ width: '100%', height: '100%' }}
-                  class="w-full h-full"
-                >
-                  <div slot="poster" className="absolute inset-0 flex items-center justify-center bg-white z-10">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                  
-                  {/* Render Hotspots */}
-                  {arAsset.hotspots && arAsset.hotspots.map((hotspot) => (
-                    <button 
-                      key={hotspot.id}
-                      slot={`hotspot-${hotspot.name}`} 
-                      data-position={hotspot.position} 
-                      data-normal={hotspot.normal}
-                      className="bg-white/90 backdrop-blur border border-white/20 px-3 py-1.5 rounded-full shadow-lg text-[10px] font-black italic text-slate-800 transition-transform hover:scale-110 flex items-center gap-1.5"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                      {hotspot.labelText}
-                    </button>
-                  ))}
-                </model-viewer>
-                
+              <div
+                ref={arContainerRef}
+                style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', overflow: 'hidden', backgroundColor: '#e8edf2' }}
+              >
+                {/* model-viewer is mounted here via useEffect DOM API */}
+
                 {/* Color Switcher UI */}
                 {arAsset.availableColors && (
                   <div className="absolute bottom-4 left-4 z-20 flex flex-col gap-2 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white/50 shadow-lg">

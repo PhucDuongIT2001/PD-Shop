@@ -75,4 +75,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "AND p.quantity <= p.lowStockThreshold " +
            "ORDER BY p.quantity ASC")
     List<Object[]> findLowStockProducts();
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id = :id")
+    Optional<Product> findByIdForUpdate(@org.springframework.data.repository.query.Param("id") Long id);
 }

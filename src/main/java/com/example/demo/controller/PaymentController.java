@@ -82,6 +82,7 @@ public class PaymentController {
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Link thanh toán đã được gửi vào email của bạn!");
+        response.put("paymentUrl", paymentUrl);
         return ResponseEntity.ok(response);
     }
 

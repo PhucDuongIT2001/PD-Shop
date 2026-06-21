@@ -253,11 +253,15 @@ public class ExcelImportService {
     }
 
     private String generateUniqueSlug(String name, Long currentId) {
-        String base    = generateSlug(name);
+        String base = generateSlug(name);
+        // Fallback khi tên tiếng Việt bị rỗng sau normalize
+        if (base == null || base.isBlank()) {
+            base = "product-" + System.currentTimeMillis();
+        }
         String slug    = base;
         int    counter = 1;
         while (productRepository.findBySlug(slug)
-                .filter(p -> !p.getId().equals(currentId)).isPresent()) {
+                .filter(p -> currentId == null || !p.getId().equals(currentId)).isPresent()) {
             slug = base + "-" + counter++;
         }
         return slug;
@@ -265,8 +269,16 @@ public class ExcelImportService {
 
     private String generateSlug(String input) {
         if (input == null) return "";
+        // Bước 1: thay khoảng trắng bằng gạch ngang
         String noWhitespace = WHITESPACE.matcher(input.trim()).replaceAll("-");
-        String normalized   = Normalizer.normalize(noWhitespace, Normalizer.Form.NFD);
-        return NONLATIN.matcher(normalized).replaceAll("").toLowerCase(Locale.ENGLISH);
+        // Bước 2: NFD normalize để tách dấu khỏi ký tự
+        String normalized = Normalizer.normalize(noWhitespace, Normalizer.Form.NFD);
+        // Bước 3: xóa combining diacritical marks (chỉ xóa dấu, giữ lại chữ cái)
+        String withoutDiacritics = normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        // Bước 4: xóa ký tự không phải chữ/số/gạch ngang, viết thường
+        String slug = withoutDiacritics.replaceAll("[^a-zA-Z0-9-]", "").toLowerCase(Locale.ENGLISH);
+        // Bước 5: xóa gạch ngang đầu/cuối thừa
+        slug = slug.replaceAll("-{2,}", "-").replaceAll("^-|-$", "");
+        return slug;
     }
 }

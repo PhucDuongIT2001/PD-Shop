@@ -52,4 +52,9 @@ TestBcrypt.java
 
 # Frontend node_modules & dist
 frontend/node_modules/
-# frontend/dist/
+frontend/dist/
+app.jar
+~$Slide_Thuyet_Trinh_PDShop_18_Slides.pptx
+*.gz
+frontend/scratch/
+

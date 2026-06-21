@@ -77,37 +77,34 @@ public class OrderService {
 
         Order order = new Order();
         order.setUser(user);
-        // COD → PENDING ngay. VNPAY → UNCONFIRMED chờ thanh toán
-        order.setStatus(pm == PaymentMethod.COD ? OrderStatus.PENDING : OrderStatus.UNCONFIRMED);
+        order.setOrderDate(java.time.LocalDateTime.now());
+        // Cả hai phương thức thanh toán đều cần xác thực qua email trước
+        order.setStatus(OrderStatus.UNCONFIRMED);
         order.setShippingName(request.getShippingName());
         order.setShippingPhone(request.getShippingPhone());
         order.setShippingAddress(request.getShippingAddress());
         order.setNote(request.getNote());
         order.setPaymentMethod(pm);
+        order.setConfirmationToken(java.util.UUID.randomUUID().toString());
 
         double totalAmount = 0.0;
 
         for (var cartItem : activeItems) {
-            Long productId = cartItem.getProduct().getId();
-            int qty = cartItem.getQuantity();
-
-            // Trừ tồn kho ngay cho COD; VNPAY hoãn trừ kho đến khi thanh toán thành công qua IPN
-            if (pm == PaymentMethod.COD) {
-                inventoryService.exportStock(
-                        productId,
-                        qty,
-                        "Xuất kho cho đơn hàng COD #pending của user: " + username
+            com.example.demo.entity.Product product = cartItem.getProduct();
+            if (product.getQuantity() < cartItem.getQuantity()) {
+                throw new com.example.demo.exception.InsufficientStockException(
+                    "Sản phẩm '" + product.getName() + "' không đủ tồn kho. Yêu cầu: " + cartItem.getQuantity() + ", Hiện có: " + product.getQuantity()
                 );
             }
 
             OrderDetail detail = new OrderDetail();
             detail.setOrder(order);
-            detail.setProduct(cartItem.getProduct());
-            detail.setQuantity(qty);
-            detail.setPrice(cartItem.getProduct().getPrice()); // snapshot giá tại thời điểm đặt
+            detail.setProduct(product);
+            detail.setQuantity(cartItem.getQuantity());
+            detail.setPrice(product.getPrice()); // snapshot giá tại thời điểm đặt
             order.getOrderDetails().add(detail);
 
-            totalAmount += cartItem.getProduct().getPrice() * qty;
+            totalAmount += product.getPrice() * cartItem.getQuantity();
         }
 
         order.setTotalAmount(totalAmount);
@@ -117,29 +114,32 @@ public class OrderService {
         cart.getItems().removeAll(activeItems);
         cartRepository.save(cart);
 
-        OrderResponse response = toResponse(saved);
-
-        if (pm == PaymentMethod.VNPAY) {
-            // Tạo URL VNPay và trả thẳng về client để redirect ngay
-            String paymentUrl = vnpayService.createPaymentUrl(saved.getId(), httpRequest);
-            response.setPaymentUrl(paymentUrl);
-        } else {
-            // COD: Thông báo Admin có đơn mới
-            try {
-                notificationService.sendToAdmins(
-                    "Đơn hàng mới #" + saved.getId(),
-                    "Khách hàng " + username + " vừa đặt đơn COD trị giá " +
-                    new java.text.DecimalFormat("#,###").format(saved.getTotalAmount()) + "đ",
-                    com.example.demo.entity.enums.NotificationType.ORDER_CREATED,
-                    com.example.demo.entity.enums.NotificationPriority.HIGH,
-                    "/admin/orders"
-                );
-            } catch (Exception e) {
-                System.err.println("Failed to push order notification: " + e.getMessage());
+        // Khởi tạo các quan hệ Lazy Loading trước khi chuyển sang luồng Async gửi Email
+        if (saved.getUser() != null) {
+            saved.getUser().getEmail();
+            saved.getUser().getUsername();
+            if (saved.getUser().getProfile() != null) {
+                saved.getUser().getProfile().getFullName();
             }
         }
+        if (saved.getOrderDetails() != null) {
+            saved.getOrderDetails().forEach(detail -> {
+                if (detail.getProduct() != null) {
+                    detail.getProduct().getName();
+                    detail.getProduct().getPrice();
+                    detail.getProduct().getThumbnail();
+                }
+            });
+        }
 
-        return response;
+        // Gửi email xác thực đơn hàng (2-step verification)
+        try {
+            emailService.sendOrderConfirmation(saved);
+        } catch (Exception e) {
+            System.err.println("Failed to send order confirmation email: " + e.getMessage());
+        }
+
+        return toResponse(saved);
     }
 
     // -----------------------------------------------------------------------
@@ -158,6 +158,17 @@ public class OrderService {
         order.setConfirmationToken(null); // Xoá token để tránh dùng lại
         Order savedOrder = orderRepository.save(order);
 
+        // Trừ tồn kho ngay cho COD sau khi xác nhận email thành công
+        if (savedOrder.getPaymentMethod() == PaymentMethod.COD) {
+            savedOrder.getOrderDetails().forEach(detail ->
+                    inventoryService.exportStock(
+                            detail.getProduct().getId(),
+                            detail.getQuantity(),
+                            "Xuất kho cho đơn hàng COD #" + savedOrder.getId() + " sau khi xác thực email thành công."
+                    )
+            );
+        }
+
         // Notify Admins about new order
         try {
             notificationService.sendToAdmins(
@@ -169,7 +180,6 @@ public class OrderService {
                 "/admin/orders"
             );
         } catch (Exception e) {
-            // Log warning but don't fail transactional checkout confirmation
             System.err.println("Failed to push registration or order notification: " + e.getMessage());
         }
 
@@ -189,14 +199,26 @@ public class OrderService {
         validateTransition(order.getStatus(), newStatus);
 
         if (newStatus == OrderStatus.CANCELLED) {
-            // Hoàn trả tồn kho khi huỷ đơn
-            order.getOrderDetails().forEach(detail ->
-                    inventoryService.importStock(
-                            detail.getProduct().getId(),
-                            detail.getQuantity(),
-                            "Hoàn kho từ đơn hàng bị huỷ #" + order.getId()
-                    )
-            );
+            // Chỉ hoàn kho nếu kho thực sự đã bị khấu trừ trước đó
+            boolean wasStockDeducted = (order.getPaymentMethod() == PaymentMethod.COD 
+                    && (order.getStatus() == OrderStatus.PENDING 
+                        || order.getStatus() == OrderStatus.SHIPPING 
+                        || order.getStatus() == OrderStatus.DELIVERED))
+                || (order.getPaymentMethod() == PaymentMethod.VNPAY 
+                    && (order.getStatus() == OrderStatus.PAID 
+                        || order.getStatus() == OrderStatus.SHIPPING 
+                        || order.getStatus() == OrderStatus.DELIVERED));
+
+            if (wasStockDeducted) {
+                // Hoàn trả tồn kho khi huỷ đơn
+                order.getOrderDetails().forEach(detail ->
+                        inventoryService.importStock(
+                                detail.getProduct().getId(),
+                                detail.getQuantity(),
+                                "Hoàn kho từ đơn hàng bị huỷ #" + order.getId()
+                        )
+                );
+            }
         }
 
         order.setStatus(newStatus);
@@ -224,10 +246,20 @@ public class OrderService {
     // -----------------------------------------------------------------------
     @Transactional
     public void markOrderAsPaid(Long id) {
-        Order order = orderRepository.findById(id).orElse(null);
+        // Sử dụng khóa dòng bi quan (PESSIMISTIC_WRITE) để khóa đơn hàng và nạp đầy đủ thông tin chi tiết
+        Order order = orderRepository.findByIdWithDetailsForUpdate(id).orElse(null);
         if (order != null && order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.PAID);
             Order saved = orderRepository.save(order);
+
+            // Trừ kho và tăng số lượng bán cho sản phẩm thực tế
+            saved.getOrderDetails().forEach(detail ->
+                    inventoryService.exportStock(
+                            detail.getProduct().getId(),
+                            detail.getQuantity(),
+                            "Xuất kho cho đơn hàng VNPay đã thanh toán thành công #" + saved.getId()
+                    )
+            );
             
             // Notify Customer
             try {
@@ -329,6 +361,7 @@ public class OrderService {
     private void validateTransition(OrderStatus current, OrderStatus next) {
         boolean valid = switch (current) {
             case PENDING  -> next == OrderStatus.SHIPPING  || next == OrderStatus.CANCELLED;
+            case PAID     -> next == OrderStatus.SHIPPING  || next == OrderStatus.CANCELLED;
             case SHIPPING -> next == OrderStatus.DELIVERED || next == OrderStatus.CANCELLED;
             default       -> false; // DELIVERED, CANCELLED là trạng thái cuối
         };

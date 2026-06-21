@@ -40,6 +40,9 @@ public class AuthControllerIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
@@ -48,15 +51,18 @@ public class AuthControllerIntegrationTest {
     }
 
     @Test
-    void registerUser_whenValidInput_shouldCreateUserAndRedirectToLogin() throws Exception {
-        mockMvc.perform(post("/register")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("username", "newuser")
-                        .param("email", "newuser@example.com")
-                        .param("password", "Password123!")
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login?registered"));
+    void registerUser_whenValidInput_shouldCreateUserAndReturn200() throws Exception {
+        java.util.Map<String, String> payload = new java.util.HashMap<>();
+        payload.put("username", "newuser");
+        payload.put("email", "newuser@example.com");
+        payload.put("password", "Password123!");
+        payload.put("phone", "0901234567");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User registered successfully"));
 
         User savedUser = userRepository.findByUsername("newuser").orElse(null);
         assertThat(savedUser).isNotNull();

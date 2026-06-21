@@ -86,9 +86,10 @@ img {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-  }
+}
+
+/* Fix model-viewer poster display issues with Tailwind */
+[slot="poster"].hide {
+  display: none !important;
 }
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { User, Mail, Lock, Phone, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, Phone, Eye, EyeOff, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -57,7 +57,13 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full mb-4 flex justify-start">
+        <Link to="/" className="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-600 transition-colors gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
+          <ArrowLeft className="h-4 w-4" />
+          Về trang chủ
+        </Link>
+      </div>
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 space-y-8 border border-gray-100">
         
         {/* Header */}

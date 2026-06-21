@@ -182,7 +182,7 @@ const ARPlannerPage = () => {
     raycaster.setFromCamera(mouse, cameraRef.current);
 
     // Find if we clicked on any placed meshes
-    const meshes = placedItems.map(item => item.mesh);
+    const meshes = placedItems.filter(item => item && item.mesh).map(item => item.mesh);
     const intersects = raycaster.intersectObjects(meshes, true);
 
     if (intersects.length > 0) {
@@ -208,6 +208,11 @@ const ARPlannerPage = () => {
   const handleCanvasPointerMove = (event) => {
     if (!isDraggingRef.current || !dragItemRef.current || !cameraRef.current || !rendererRef.current) return;
 
+    // Capture values into local variables to avoid race conditions when React queues state updates
+    const dragItem = dragItemRef.current;
+    const dragItemUuid = dragItem.uuid;
+    const dragMesh = dragItem.mesh;
+
     const rect = canvasRef.current.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -224,12 +229,13 @@ const ARPlannerPage = () => {
 
       // Keep within boundaries
       if (Math.abs(x) < 5 && Math.abs(z) < 5) {
-        const mesh = dragItemRef.current.mesh;
-        mesh.position.set(x, 0, z);
+        if (dragMesh) {
+          dragMesh.position.set(x, 0, z);
+        }
 
-        // Update state position
+        // Update state position using captured UUID
         setPlacedItems(prev => prev.map(item => 
-          item.uuid === dragItemRef.current.uuid 
+          (item && item.uuid === dragItemUuid)
             ? { ...item, posX: x, posZ: z }
             : item
         ));
@@ -284,9 +290,21 @@ const ARPlannerPage = () => {
               const size = box.getSize(new THREE.Vector3());
               const maxDim = Math.max(size.x, size.y, size.z);
               
-              // Snug standard scale matching real life (approx 1.2m)
-              const standardScale = 1.0;
-              mesh.scale.set(standardScale, standardScale, standardScale);
+              // Tự động chuẩn hóa kích thước vật thể ngoài đời thực
+              let targetSize = 1.0; // Mặc định 1 mét
+              const nameLower = (product.productName || product.name || '').toLowerCase();
+              if (nameLower.includes('phone') || nameLower.includes('samsung') || nameLower.includes('iphone')) {
+                targetSize = 0.18; // iPhone/Điện thoại khoảng 18cm (hơi phóng to chút để dễ nhìn thấy)
+              } else if (nameLower.includes('laptop') || nameLower.includes('macbook') || nameLower.includes('computer')) {
+                targetSize = 0.45; // Laptop khoảng 45cm
+              } else if (nameLower.includes('chair') || nameLower.includes('ghế')) {
+                targetSize = 0.75; // Ghế khoảng 75cm
+              } else if (nameLower.includes('table') || nameLower.includes('bàn') || nameLower.includes('desk')) {
+                targetSize = 1.5; // Bàn khoảng 1.5 mét
+              }
+              
+              const scaleFactor = targetSize / (maxDim || 1.0);
+              mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
               // Enable shadows
               mesh.traverse((node) => {
@@ -347,8 +365,10 @@ const ARPlannerPage = () => {
   const handleRotate = (uuid, value) => {
     const angleRad = (value * Math.PI) / 180;
     setPlacedItems(prev => prev.map(item => {
-      if (item.uuid === uuid) {
-        item.mesh.rotation.y = angleRad;
+      if (item && item.uuid === uuid) {
+        if (item.mesh) {
+          item.mesh.rotation.y = angleRad;
+        }
         return { ...item, rotY: parseFloat(value) };
       }
       return item;
@@ -357,18 +377,18 @@ const ARPlannerPage = () => {
 
   // Remove item from room
   const removeItem = (uuid) => {
-    const item = placedItems.find(p => p.uuid === uuid);
+    const item = placedItems.find(p => p && p.uuid === uuid);
     if (!item) return;
 
-    if (sceneRef.current) {
+    if (sceneRef.current && item.mesh) {
       sceneRef.current.remove(item.mesh);
     }
 
-    setPlacedItems(prev => prev.filter(p => p.uuid !== uuid));
+    setPlacedItems(prev => prev.filter(p => p && p.uuid !== uuid));
     if (selectedItem?.uuid === uuid) {
       setSelectedItem(null);
     }
-    toast.success(`Đã xóa ${item.name} khỏi thiết kế`);
+    toast.success(`Đã xóa ${item.name || "sản phẩm"} khỏi thiết kế`);
   };
 
   // Clear all items in room
@@ -377,7 +397,9 @@ const ARPlannerPage = () => {
     if (!window.confirm("Bạn có chắc chắn muốn làm sạch toàn bộ bản thiết kế này?")) return;
 
     placedItems.forEach(item => {
-      sceneRef.current?.remove(item.mesh);
+      if (item && item.mesh) {
+        sceneRef.current?.remove(item.mesh);
+      }
     });
     setPlacedItems([]);
     setSelectedItem(null);
@@ -386,7 +408,7 @@ const ARPlannerPage = () => {
 
   // Calculate total price of room items
   const calculateTotal = () => {
-    return placedItems.reduce((acc, curr) => acc + curr.price, 0);
+    return placedItems.reduce((acc, curr) => acc + (curr ? curr.price : 0), 0);
   };
 
   // Save layout configuration to database
@@ -399,7 +421,7 @@ const ARPlannerPage = () => {
     const name = layoutName.trim() || `Bản thiết kế ngày ${new Date().toLocaleDateString()}`;
     
     // Package items for DB
-    const itemsReq = placedItems.map(item => ({
+    const itemsReq = placedItems.filter(item => item).map(item => ({
       productId: item.productId,
       posX: item.posX,
       posY: item.posY,
@@ -435,7 +457,9 @@ const ARPlannerPage = () => {
 
     // Clear existing
     placedItems.forEach(item => {
-      sceneRef.current?.remove(item.mesh);
+      if (item && item.mesh) {
+        sceneRef.current?.remove(item.mesh);
+      }
     });
     setPlacedItems([]);
     setSelectedItem(null);
@@ -459,7 +483,26 @@ const ARPlannerPage = () => {
               // Restore coordinates
               mesh.position.set(itemDto.posX, itemDto.posY, itemDto.posZ);
               mesh.rotation.y = (itemDto.rotY * Math.PI) / 180;
-              mesh.scale.set(1.0, 1.0, 1.0);
+              
+              // Tự động chuẩn hóa kích thước vật thể khi load lại bản vẽ
+              const box = new THREE.Box3().setFromObject(mesh);
+              const size = box.getSize(new THREE.Vector3());
+              const maxDim = Math.max(size.x, size.y, size.z);
+              
+              let targetSize = 1.0;
+              const nameLower = (itemDto.productName || '').toLowerCase();
+              if (nameLower.includes('phone') || nameLower.includes('samsung') || nameLower.includes('iphone')) {
+                targetSize = 0.18;
+              } else if (nameLower.includes('laptop') || nameLower.includes('macbook') || nameLower.includes('computer')) {
+                targetSize = 0.45;
+              } else if (nameLower.includes('chair') || nameLower.includes('ghế')) {
+                targetSize = 0.75;
+              } else if (nameLower.includes('table') || nameLower.includes('bàn') || nameLower.includes('desk')) {
+                targetSize = 1.5;
+              }
+              
+              const scaleFactor = targetSize / (maxDim || 1.0);
+              mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
               // Enable shadows
               mesh.traverse((node) => {
@@ -512,6 +555,7 @@ const ARPlannerPage = () => {
 
       // Call add to cart endpoint for each item
       for (const item of placedItems) {
+        if (!item) continue;
         // Format payload based on shopping cart requirements
         await api.post('/cart', {
           productId: item.productId,

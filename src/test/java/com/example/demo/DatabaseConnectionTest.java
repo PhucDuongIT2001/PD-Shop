@@ -1,26 +1,28 @@
 package com.example.demo;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("test")
 public class DatabaseConnectionTest {
 
-    @Test
-    void testConnection() {
-        String url = "jdbc:mysql://localhost:3306/PD_SHOP?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-        String user = "root";
-        String password = "123456";
+    @Autowired
+    private DataSource dataSource;
 
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+    @Test
+    void testConnection() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
             System.out.println("--- KẾT NỐI THÀNH CÔNG ĐẾN: " + connection.getMetaData().getURL());
-            assert connection.isValid(5);
-        } catch (SQLException e) {
-            System.err.println("--- KẾT NỐI THẤT BẠI ---");
-            e.printStackTrace();
-            assert false;
+            assertThat(connection.isValid(5)).isTrue();
         }
     }
 }

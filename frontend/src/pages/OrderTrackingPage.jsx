@@ -39,22 +39,30 @@ const OrderTrackingPage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'UNCONFIRMED': return 'bg-orange-100 text-orange-850';
       case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'PAID': return 'bg-blue-100 text-blue-800';
+      case 'PROCESSING': return 'bg-blue-100 text-blue-800';
+      case 'SHIPPED':
       case 'SHIPPING': return 'bg-purple-100 text-purple-800';
       case 'DELIVERED': return 'bg-green-100 text-green-800';
       case 'CANCELLED': return 'bg-red-100 text-red-800';
+      case 'PAID': return 'bg-emerald-100 text-emerald-800';
+      case 'FAILED': return 'bg-rose-100 text-rose-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'PENDING': return 'Đang xử lý';
-      case 'PAID': return 'Đã thanh toán';
+      case 'UNCONFIRMED': return 'Chờ xác nhận Email';
+      case 'PENDING': return 'Chờ xử lý';
+      case 'PROCESSING': return 'Đang chuẩn bị';
+      case 'SHIPPED':
       case 'SHIPPING': return 'Đang giao hàng';
       case 'DELIVERED': return 'Đã giao thành công';
       case 'CANCELLED': return 'Đã huỷ';
+      case 'PAID': return 'Đã thanh toán';
+      case 'FAILED': return 'Thanh toán thất bại';
       default: return status;
     }
   };

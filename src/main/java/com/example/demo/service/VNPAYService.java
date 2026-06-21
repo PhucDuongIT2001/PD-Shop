@@ -150,12 +150,13 @@ public class VNPAYService {
     public Map<String, String> processIpnCallback(Map<String, String> params) {
         Map<String, String> result = new HashMap<>();
 
-        // 1. Lấy và tách chữ ký ra khỏi map trước khi tính lại
-        String receivedHash = params.remove("vnp_SecureHash");
-        params.remove("vnp_SecureHashType"); // Loại bỏ nếu có
+        // 1. Sao chép map để tránh UnsupportedOperationException trên Map không cho sửa (immutable)
+        Map<String, String> mutableParams = new HashMap<>(params);
+        String receivedHash = mutableParams.remove("vnp_SecureHash");
+        mutableParams.remove("vnp_SecureHashType"); // Loại bỏ nếu có
 
         // 2. Tính lại chữ ký từ các tham số còn lại (đã sắp xếp)
-        Map<String, String> sortedParams = new TreeMap<>(params);
+        Map<String, String> sortedParams = new TreeMap<>(mutableParams);
         StringBuilder hashData = new StringBuilder();
         for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
             if (entry.getValue() != null && !entry.getValue().isEmpty()) {
@@ -180,9 +181,9 @@ public class VNPAYService {
         }
 
         // 4. Lấy thông tin đơn hàng
-        String txnRef       = params.get("vnp_TxnRef");
-        String responseCode = params.get("vnp_ResponseCode");
-        String vnpAmount    = params.get("vnp_Amount");
+        String txnRef       = mutableParams.get("vnp_TxnRef");
+        String responseCode = mutableParams.get("vnp_ResponseCode");
+        String vnpAmount    = mutableParams.get("vnp_Amount");
 
         Long orderId;
         try {
@@ -194,7 +195,8 @@ public class VNPAYService {
             return result;
         }
 
-        Order order = orderRepository.findByIdWithDetails(orderId).orElse(null);
+        // Sử dụng khóa dòng bi quan (PESSIMISTIC_WRITE) để khóa và load đơn hàng kèm theo chi tiết
+        Order order = orderRepository.findByIdWithDetailsForUpdate(orderId).orElse(null);
         if (order == null) {
             log.error("VNPAY IPN: Order not found for id={}", orderId);
             result.put("RspCode", "01");
@@ -239,10 +241,10 @@ public class VNPAYService {
             transaction.setUser(order.getUser());
         }
 
-        transaction.setVnpTransactionNo(params.get("vnp_TransactionNo"));
-        transaction.setBankCode(params.get("vnp_BankCode"));
+        transaction.setVnpTransactionNo(mutableParams.get("vnp_TransactionNo"));
+        transaction.setBankCode(mutableParams.get("vnp_BankCode"));
         transaction.setResponseCode(responseCode);
-        transaction.setRawResponse(params.toString());
+        transaction.setRawResponse(mutableParams.toString());
 
         if ("00".equals(responseCode)) {
             order.setStatus(OrderStatus.PAID);

@@ -60,8 +60,8 @@ public class SecurityConfig {
                     "http://localhost:5174",
                     "http://localhost:5175",
                     "http://localhost:3000",
-                    "http://47.129.213.238.nip.io",
-                    "http://47.129.213.238",
+                    "http://54.179.62.168.nip.io",
+                    "http://54.179.62.168",
                     frontendUrl
                 ));
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -80,6 +80,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/brands", "/api/brands/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/orders/track").permitAll()
+                .requestMatchers("/api/orders/confirm").permitAll()
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
                 .anyRequest().authenticated()
             )

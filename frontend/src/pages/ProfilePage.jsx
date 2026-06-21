@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 
@@ -115,6 +116,12 @@ const ProfilePage = () => {
             >
               <i className="fa-solid fa-lock mr-3"></i> Đổi mật khẩu
             </button>
+            <Link 
+              to="/orders"
+              className="w-full text-left px-6 py-4 rounded-2xl font-bold transition-all text-slate-600 hover:bg-slate-100 block"
+            >
+              <i className="fa-solid fa-box mr-3"></i> Đơn hàng của tôi
+            </Link>
           </nav>
         </div>
 

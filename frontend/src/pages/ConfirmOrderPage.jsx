@@ -12,6 +12,8 @@ const ConfirmOrderPage = () => {
   
   const [status, setStatus] = useState('loading'); // 'loading', 'success', 'error'
   const [message, setMessage] = useState('');
+  const [paymentUrl, setPaymentUrl] = useState('');
+  const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
     if (!token) {
@@ -24,11 +26,9 @@ const ConfirmOrderPage = () => {
       try {
         const response = await api.post(`/orders/confirm?token=${token}`);
         if (response.data.paymentUrl) {
+          setPaymentUrl(response.data.paymentUrl);
           setStatus('redirecting');
-          setMessage(`Đơn hàng #${response.data.id} đã được xác nhận! Đang chuyển hướng sang cổng thanh toán VNPAY...`);
-          setTimeout(() => {
-            window.location.href = response.data.paymentUrl;
-          }, 2000);
+          setMessage(`Đơn hàng #${response.data.id} đã được xác nhận thành công!`);
         } else {
           setStatus('success');
           setMessage(`Đơn hàng #${response.data.id} đã được xác nhận thành công!`);
@@ -41,6 +41,17 @@ const ConfirmOrderPage = () => {
 
     confirmOrder();
   }, [token]);
+
+  useEffect(() => {
+    if (status !== 'redirecting' || countdown <= 0 || !paymentUrl) return;
+    const timer = setTimeout(() => {
+      setCountdown(c => c - 1);
+      if (countdown === 1) {
+        window.location.href = paymentUrl;
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [status, countdown, paymentUrl]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -59,9 +70,33 @@ const ConfirmOrderPage = () => {
 
         {status === 'redirecting' && (
           <div className="py-8 flex flex-col items-center">
-            <Loader2 className="w-16 h-16 text-orange-500 animate-spin mb-4" />
-            <h2 className="text-2xl font-black text-slate-800 italic uppercase mb-2">Đang chuyển hướng...</h2>
-            <p className="text-slate-600">{message}</p>
+            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle className="w-12 h-12 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-800 italic uppercase mb-2">Đã Xác Nhận!</h2>
+            <p className="text-slate-600 mb-6">{message}</p>
+            
+            <a 
+              href={paymentUrl}
+              className="w-full inline-flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black uppercase italic tracking-wider transition-all hover:shadow-lg hover:shadow-blue-600/20 active:scale-98 mb-4"
+            >
+              Thanh toán ngay qua VNPAY
+            </a>
+
+            <div className="flex flex-col items-center gap-2 my-2">
+              <p className="text-[11px] font-bold text-slate-400">Hoặc quét mã QR dưới đây bằng điện thoại để thanh toán:</p>
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-2xl shadow-inner">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentUrl)}`} 
+                  alt="VNPAY QR Code" 
+                  className="w-[150px] h-[150px] object-contain rounded-lg"
+                />
+              </div>
+            </div>
+            
+            <p className="text-xs text-slate-400 font-bold mt-2">
+              Hệ thống sẽ tự động chuyển hướng sau <span className="font-extrabold text-blue-600">{countdown}s</span>...
+            </p>
           </div>
         )}
 
@@ -72,7 +107,7 @@ const ConfirmOrderPage = () => {
             </div>
             <h2 className="text-2xl font-black text-slate-800 italic uppercase mb-2">Thành Công!</h2>
             <p className="text-slate-600 mb-6">{message}</p>
-            <Button onClick={() => navigate('/my-orders')} className="w-full bg-slate-900 text-white hover:bg-slate-800">
+            <Button onClick={() => navigate('/orders')} className="w-full bg-slate-900 text-white hover:bg-slate-800">
               Quản lý đơn hàng
             </Button>
           </div>
